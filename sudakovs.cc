@@ -3,8 +3,11 @@
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_errno.h>
 #include <iostream>
+#include "multi_dim_gsl.h"
 
 using namespace std;
+
+double P_gg(double z);
 
 //Running alpha_s(t)
 double alpha_s(double t)
@@ -29,16 +32,16 @@ double sudakov_integral(double T, void *params)
 
  double t0=p->t0;
 
- double int_temp=1./T*(-11./6.+4.*T-T*T+2.*T*T*T/3.+2.*(log(1.-T)-log(T)));
+ double CA=3.;
+
+ double int_temp=2.*CA*1./T*(-11./6.+4.*T-T*T+2.*T*T*T/3.+2.*(log(1.-T)-log(T)));
  int_temp*=alpha_s(t0/T);
  return int_temp;
 }
 
 //Compute log of the Sudakov
-double Sudakov_log(double t, double t0)
+double zanalytic_Sudakov_log(double t, double t0)
 {
-  double CA=3.;
-
   gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
 
   gsl_function F;
@@ -49,13 +52,45 @@ double Sudakov_log(double t, double t0)
   gsl_integration_qags (&F, t0/t, 0.5, 0, 1e-7, 1000,
                         w, &result, &error);
   
-  return -2.*CA/2./M_PI*result;
+  return -1./2./M_PI*result;
+}
+
+//Compute log of the Sudakov through double integral
+double Sudakov_log(double t, double t0)
+{
+  size_t limit = 100;
+  double result, abserr, inner_result, inner_abserr;
+
+  IntegrationWorkspace wsp1(limit);
+  IntegrationWorkspace wsp2(limit);
+
+  auto outer = make_gsl_function( [&](double tp) {
+    double z_lo=t0/tp;
+    double z_hi=1.-t0/tp;
+    auto inner = make_gsl_function( [&](double z) {return -1./tp * alpha_s(tp*(z*(1.-z)))/(2.*M_PI) * P_gg(z) ;} );
+    gsl_integration_qags(inner, z_lo, z_hi, 0, 1e-7, limit, 
+		         wsp1, &inner_result, &inner_abserr);
+    return inner_result;
+  } );
+
+  double t_lo=2.*t0;
+  double t_hi=t;
+  gsl_integration_qags(outer, t_lo, t_hi, 0, 1e-7, limit,
+		       wsp2, &result, &abserr);  
+
+  return result;
 }
 
 //Compute the Sudakov
 double Sudakov(double t, double t0)
 {
   return exp(Sudakov_log(t,t0));
+}
+
+//Compute the zanalytic Sudakov
+double zanalytic_Sudakov(double t, double t0)
+{
+  return exp(zanalytic_Sudakov_log(t,t0));
 }
 
 struct find_t2_params
