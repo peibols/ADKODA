@@ -7,7 +7,7 @@
 using namespace std;
 
 double Sudakov(double t, double t0);
-double generate_t2(double t0, double t1, double R);
+double generate_t2(double t0, double t1, double R, double numer);
 double generate_x2(double t0, double t2, double R);
 
 int main(int argc, char** argv) {
@@ -24,6 +24,9 @@ int main(int argc, char** argv) {
   double x_max=1.;
   double t0=2.;
 
+  double lowest_sudakov=Sudakov(2.*t0,t0);
+  double highest_sudakov=Sudakov(t_max,t0);
+
   //Parton Shower
   for (int iEv=1; iEv<=Nev; iEv++) {
     
@@ -32,14 +35,18 @@ int main(int argc, char** argv) {
 
     double t2=-1000.;
     double x2=-1000.;
-    
+   
+    double prev_sudakov=highest_sudakov;
+
+    int iter=0;
     while (true)
     {
       double R=dis(gen);
-      if (R>Sudakov(t1,t0)/Sudakov(2.*t0,t0))
+      if (iter!=0) prev_sudakov=Sudakov(t1,t0); 
+      if (R>prev_sudakov/lowest_sudakov)
       {
         //Generate t
-        double t2_temp=generate_t2(t0,t1,R);
+        double t2_temp=generate_t2(t0,t1,R,log(prev_sudakov));
         if (t2_temp>2.*t0) t2=t2_temp;
         else break;
         //Generate z
@@ -58,6 +65,8 @@ int main(int argc, char** argv) {
         x1=x2;
       }
       else break;
+
+      iter++;
     }
     cout << "#EVENT= " << iEv << endl;
   //End Event Loop

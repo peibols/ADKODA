@@ -112,11 +112,8 @@ double find_t2(double t2, void *params)
 }
 
 //Next virtuality iterator
-double generate_t2(double t0, double t1, double R)
+double generate_t2(double t0, double t1, double R, double numer)
 {
-  //Integrate numerator (this one time)
-  double numer=Sudakov_log(t1,t0); 
- 
   //Root finder
   int status;
   int iter=0, max_iter=100;
