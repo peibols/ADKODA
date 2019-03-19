@@ -82,22 +82,20 @@ double generate_t2(double t0, double t1, double R)
   int iter=0, max_iter=100;
 
   double r=0.;
-  double x_lo=t0, x_hi=t1;
+  double x_lo=2.*t0, x_hi=t1;
  
   const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
   gsl_root_fsolver *s = gsl_root_fsolver_alloc (T); 
 
   gsl_function F;
-  struct find_t2_params params = {t0/2.,t1,R};
+  struct find_t2_params params = {t0,t1,R};
   F.function = &find_t2;
   F.params = &params;
-  
-  cout << " Before start LowF= " << GSL_FN_EVAL(&F,x_lo) << " HighF= " << GSL_FN_EVAL(&F,x_hi) << endl << " t0 = " << t0 << " t1= " << t1 << endl;
 
   gsl_root_fsolver_set (s, &F, x_lo, x_hi);
  
   do {
-    cout << " at step= " << iter << " LowF= " << GSL_FN_EVAL(&F,x_lo) << " HighF= " << GSL_FN_EVAL(&F,x_hi) << endl;
+    //cout << " at step= " << iter << " LowF= " << GSL_FN_EVAL(&F,x_lo) << " HighF= " << GSL_FN_EVAL(&F,x_hi) << endl;
     
     iter++;
     status=gsl_root_fsolver_iterate(s);
@@ -106,8 +104,8 @@ double generate_t2(double t0, double t1, double R)
     x_hi = gsl_root_fsolver_x_upper (s);
     status = gsl_root_test_interval (x_lo, x_hi, 0, 0.001);
 
-    if (status == GSL_SUCCESS)
-      printf ("Converged:\n");
+    //if (status == GSL_SUCCESS)
+      //printf ("Converged:\n");
 
   } while (status==GSL_CONTINUE && iter<max_iter); 
 
