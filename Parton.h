@@ -82,11 +82,9 @@ class Parton : protected fjcore::PseudoJet
 
     Parton() : PseudoJet() {}; 
     Parton (int id, int stat, const FourVector& p, const FourVector& x);
-    Parton (const Parton& srp);
+    //Parton (const Parton& srp);
 	  
-    virtual ~Parton();
-
-  protected:
+    ~Parton();
 
     void set_id(int id);
     int id();
@@ -94,16 +92,38 @@ class Parton : protected fjcore::PseudoJet
     void set_stat(int stat);
     int stat();
 
+    void set_mass(double mass);
+    double mass();
+
+    void set_virt(double virt);
+    double virt();
+
+    void set_mom(int mom);
+    int mom();
+
+    void set_d1(int d1);
+    int d1();
+
+    void set_d2(int d2);
+    int d2();
+
     void set_p(const FourVector& p);
     const FourVector p();
 
     void set_x(const FourVector& x);
     const FourVector x();
-  
+
+    void set_z(double z);
+    double z();
+
   private:
 
     FourVector _p;
     FourVector _x;
     int _id;
     int _stat;
+    int _mom, _d1, _d2;
+    double _mass;
+    double _virt;
+    double _z;
 };
