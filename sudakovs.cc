@@ -68,6 +68,7 @@ double Sudakov_log(double t, double t0)
     double z_lo=t0/tp;
     double z_hi=1.-t0/tp;
     auto inner = make_gsl_function( [&](double z) {return -1./tp * alpha_s(tp*(z*(1.-z)))/(2.*M_PI) * P_gg(z) ;} );
+    //inner.params=&t0;
     gsl_integration_qags(inner, z_lo, z_hi, 0, 1e-7, limit, 
 		         wsp1, &inner_result, &inner_abserr);
     return inner_result;
@@ -95,7 +96,7 @@ double zanalytic_Sudakov(double t, double t0)
 
 struct find_t2_params
 {
-  double t0, t1, R;
+  double t0, R, numer;
 };
 
 //Find next virtuality function
@@ -104,15 +105,19 @@ double find_t2(double t2, void *params)
   struct find_t2_params *p = (struct find_t2_params*) params;
 
   double t0=p->t0;
-  double t1=p->t1;
   double R=p->R;
+  double numer=p->numer;
 
-  return Sudakov_log(t1,t0)-Sudakov_log(t2,t0)-log(R);     
+  return numer-Sudakov_log(t2,t0)-log(R);     
 }
 
 //Next virtuality iterator
 double generate_t2(double t0, double t1, double R)
 {
+  //Integrate numerator (this one time)
+  double numer=Sudakov_log(t1,t0); 
+ 
+  //Root finder
   int status;
   int iter=0, max_iter=100;
 
@@ -123,7 +128,7 @@ double generate_t2(double t0, double t1, double R)
   gsl_root_fsolver *s = gsl_root_fsolver_alloc (T); 
 
   gsl_function F;
-  struct find_t2_params params = {t0,t1,R};
+  struct find_t2_params params = {t0,R,numer};
   F.function = &find_t2;
   F.params = &params;
 
