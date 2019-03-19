@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <assert.h>
+#include "Parton.h"
 
 using namespace std;
 
@@ -51,7 +52,6 @@ int main(int argc, char** argv) {
         else break;
         //Generate z
         double Rp=dis(gen);
-        if (R==Rp) { cout << " Wrong random generation!"; exit(0); }
         double xi=generate_x2(t0,t2,Rp);
         //Follow leading parton
         if (xi>0.5) x2=x1*xi;

@@ -39,7 +39,7 @@ double sudakov_integral(double T, void *params)
  return int_temp;
 }
 
-//Compute log of the Sudakov
+//Compute log of the Sudakov with analytic z
 double zanalytic_Sudakov_log(double t, double t0)
 {
   gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
@@ -68,7 +68,6 @@ double Sudakov_log(double t, double t0)
     double z_lo=t0/tp;
     double z_hi=1.-t0/tp;
     auto inner = make_gsl_function( [&](double z) {return -1./tp * alpha_s(tp*(z*(1.-z)))/(2.*M_PI) * P_gg(z) ;} );
-    //inner.params=&t0;
     gsl_integration_qags(inner, z_lo, z_hi, 0, 1e-7, limit, 
 		         wsp1, &inner_result, &inner_abserr);
     return inner_result;
