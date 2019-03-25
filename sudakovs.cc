@@ -8,16 +8,7 @@
 using namespace std;
 
 double P_gg(double z);
-
-//Running alpha_s(t)
-double alpha_s(double t)
-{
-  double Lam=0.2;
-  double Lam2=Lam*Lam;
-  double nf=3.;
-  double b=(33.-2.*nf)/12./M_PI;
-  return 1./(b*log(t/Lam2));
-}
+double alpha_s(double t);
 
 //Sudakov integral params
 struct sudakov_integral_params
@@ -67,6 +58,8 @@ double Sudakov_log(double t, double t0)
   auto outer = make_gsl_function( [&](double tp) {
     double z_lo=t0/tp;
     double z_hi=1.-t0/tp;
+    //z_lo=0.00001;
+    //z_hi=1.;
     auto inner = make_gsl_function( [&](double z) {return -1./tp * alpha_s(tp*(z*(1.-z)))/(2.*M_PI) * P_gg(z) ;} );
     gsl_integration_qags(inner, z_lo, z_hi, 0, 1e-7, limit, 
 		         wsp1, &inner_result, &inner_abserr);

@@ -4,16 +4,32 @@
 #include <gsl/gsl_errno.h>
 #include <iostream>
 #include "multi_dim_gsl.h"
+#include "global.h"
 
 using namespace std;
 
-double alpha_s(double t);
+//Running alpha_s(t)
+double alpha_s(double t)
+{
+  double Lam=0.2;
+  double Lam2=Lam*Lam;
+  double nf=3.;
+  double b=(33.-2.*nf)/12./M_PI;
+  //cout << " alphas_constant= " << alphas_constant << endl;
+  if (alphas_constant==0) {
+    //cout << " t= " << t << " alphas= " << 1./(b*log(t/Lam2)) << endl;
+   if (1./(b*log(t/Lam2)) > 0.5) cout << " t= " << t << " alphas= " << 1./(b*log(t/Lam2)) << endl; 
+   return 1./(b*log(t/Lam2));
+  } 
+  else return 0.22;
+}
 
 //Unintegrated gg splitting function
 double P_gg(double z)
 {
   double CA=3.;
-  return 2.*CA*(z/(1.-z)+1./2.*z*(1.-z));
+  if (simple_splitting==0) return CA*(z/(1.-z)+(1.-z)/z+z*(1.-z));
+  else return 2.*CA/z;
 }
 
 //Integrated gg splitting function
@@ -51,6 +67,7 @@ double find_x2(double x, void *params)
   IntegrationWorkspace wsp(limit);
   double numer_result, numer_abserr;
   double z_lo=t0/t2;
+  //z_lo=0.00001;
   double z_hi=x;
   auto numer = make_gsl_function( [&](double z) {return alpha_s(t2*z*(1.-z))/2./M_PI * P_gg(z) ;} );
   gsl_integration_qags(numer, z_lo, z_hi, 0, 1e-7, limit,
@@ -63,6 +80,8 @@ double find_x2(double x, void *params)
 double generate_x2(double t0, double t2, double R)
 {
   double x_lo=t0/t2, x_hi=1.-t0/t2; 
+  //x_lo=0.00001; 
+  //x_hi=1.;
 
   //Integrate denominator (this one time)
   int limit=100;

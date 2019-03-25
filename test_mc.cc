@@ -4,6 +4,8 @@
 #include <random>
 #include <assert.h>
 #include "Parton.h"
+#include <fstream>
+#include "global.h"
 
 using namespace std;
 
@@ -11,22 +13,44 @@ double Sudakov(double t, double t0);
 double generate_t2(double t0, double t1, double R, double numer);
 double generate_x2(double t0, double t2, double R);
 
+int alphas_constant;
+int simple_splitting;
+
 int main(int argc, char** argv) {
 
-  assert(argc==2);
+  assert(argc==4);
+
+  alphas_constant=atoi(argv[2]);
+  simple_splitting=atoi(argv[3]);
 
   int Nev=atoi(argv[1]);
+
+  //Parameters  
+  double t_max=10000.;
+  double x_max=1.;
+  double x_min=0.00001;
+  double t0=2.;
+  double Ein=100.;
+  //readjust tmax
+  t_max=Ein*Ein;
+  double zmin=t0/t_max;
+
+  double biggest_angle=sqrt(t_max/Ein/Ein/zmin/(1.-zmin));
+
+  int lund_nbins=100;
+  double lund_hist[100][100]={{0.}};
+  double t_norm[100]={0.};
+  double t_binsize=log(t_max/2./t0)/double(lund_nbins);
+  double z_binsize=log(1./x_min)/double(lund_nbins); 
 
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(0.,1.);
 
-  double t_max=1000.;
-  double x_max=1.;
-  double t0=2.;
-
   double lowest_sudakov=Sudakov(2.*t0,t0);
   double highest_sudakov=Sudakov(t_max,t0);
+  cout << " lowest_sudakov= " << lowest_sudakov << endl;
+  cout << " biggest angle= " << biggest_angle << endl;
 
   //Parton Shower
   for (int iEv=1; iEv<=Nev; iEv++) {
@@ -36,13 +60,12 @@ int main(int argc, char** argv) {
     vector<Parton> parton_list;
     
     //Initial Hard Parton
-    double Ein=1000.;
     double Pxin=0.;
     double Pyin=0.;
     double Pzin=0.;
     FourVector phard(Pxin, Pyin, Pzin, Ein);    
     FourVector x;
-    Parton hard_parton( Parton(21,1,phard,x) );
+    Parton hard_parton( Parton(21,2,phard,x) );
     hard_parton.set_z(1.);
     hard_parton.set_mom(-3);
 
@@ -71,22 +94,45 @@ int main(int argc, char** argv) {
         if (parton_list[iP].stat()<0) continue;
         changes=1;
 
-        if (iter==0) t1=t_max;
+        if (iter==0) { t1=t_max; }
         else {
           int mom=parton_list[iP].mom();
 	  t1=parton_list[mom].virt();
         }
 
+	//Correct maximum allowed virtualities (sister dependent!)
+        double kin_maxt=pow(parton_list[iP].p().t(),2.);
+        if (kin_maxt<t1) {
+	  //cout << " kin_maxt = " << kin_maxt << "t1= " << t1 << endl;
+          t1=kin_maxt;
+        }
+        if (iter!=0) {
+          int mom=parton_list[iP].mom();
+          int sister=parton_list[mom].d1();
+          if (sister==iP) sister=parton_list[mom].d2();
+          double sis_virt=t0;
+          if (parton_list[sister].virt()!=-1000 && parton_list[sister].d1()!=-1) sis_virt=parton_list[sister].virt();
+          double sum_maxt=parton_list[iP].z()*parton_list[mom].virt()
+			  -parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt;
+          if (sum_maxt<t1) t1=sum_maxt;
+          if (sum_maxt<0) { cout << " NEGATIVE SUM MAX T= " << sum_maxt << endl << endl; sum_maxt=t0; }
+          //cout << " kin_maxt= " << kin_maxt << " sum_maxt= " << sum_maxt << endl;
+          //cout << " first piece= " << parton_list[iP].z()*parton_list[mom].virt() << " second piece= " << parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt << endl;
+	  //cout << " mom virt= " << parton_list[mom].virt() << " sis virt= " << sis_virt << endl;
+	}
+
         double R=dis(gen);
 
-        if (iter!=0) prev_sudakov=Sudakov(t1,t0); 
-        if (R>prev_sudakov/lowest_sudakov)
+        if (iter!=0 && t1>2.*t0) prev_sudakov=Sudakov(t1,t0);
+        if (t1<2.*t0) prev_sudakov=0.; 
+        if (R>prev_sudakov/lowest_sudakov && t1>2.*t0)
         {
           //Generate t
           double t2_temp=generate_t2(t0,t1,R,log(prev_sudakov));
 
           if (t2_temp>2.*t0) t2=t2_temp;
           else {
+	    cout << " TRIGGERED \n \n";
             parton_list[iP].set_stat(-1);
             parton_list[iP].set_d1(-1);
             parton_list[iP].set_d2(-1);
@@ -106,9 +152,19 @@ int main(int argc, char** argv) {
 	  FourVector x1;
 	  FourVector x2;
 
-	  Parton d1( Parton(21,1,p1,x1) );
-	  Parton d2( Parton(21,1,p2,x2) );
-		
+	  Parton d1 = Parton(21,1,p1,x1);
+	  Parton d2 = Parton(21,1,p2,x2);
+	  
+          //Follow the heir
+	  if (parton_list[iP].stat()==2) {
+            if (xi>0.5) {
+	      d1.set_stat(2);
+	    }
+	    else { 	
+	      d2.set_stat(2);
+            }
+          }
+	
 	  d1.set_mom(iP);
 	  d2.set_mom(iP);
           d1.set_z(xi);
@@ -121,12 +177,26 @@ int main(int argc, char** argv) {
 	  parton_list[iP].set_d2(parton_list.size()-1); 
 	  
 	  //Assign parton virtuality
-          cout << " t= " << t2 << " z= " << xi << endl;
-          parton_list[iP].set_virt(t2);
+          //cout << " t= " << t2 << " z= " << xi << endl;
+          //Fill Hist
+	  if (parton_list[iP].stat()==2) {
+	    int tbin=int(log(t2/2./t0)/t_binsize);
+	    int zbin=int(log(1./xi)/z_binsize);
+	    if (tbin < lund_nbins && zbin < lund_nbins) {
+	      lund_hist[tbin][zbin]+=1.;
+	      t_norm[zbin]+=1.;
+	    }
+	    //Angle 
+            double angle_dla=sqrt(t2/(xi*(1.-xi))/pow(parton_list[iP].p().t(),2.));
+            //cout << " t= " << t2 << " z= " << xi << " angle_dla= " << angle_dla << endl;
+          }
+
+	  parton_list[iP].set_virt(t2);
 	  parton_list[iP].set_stat(-1);
 	 
         }
         else {
+          //cout << " freezing with max virt= " << t1 << endl;
           parton_list[iP].set_stat(-1);
           parton_list[iP].set_d1(-1);
           parton_list[iP].set_d2(-1);
@@ -141,15 +211,53 @@ int main(int argc, char** argv) {
 
     }
     
-    cout << " Parton List Size= " << parton_list.size() << endl;
-    cout << " Nsplits= " << nsplits << endl;
+    //cout << " Parton List Size= " << parton_list.size() << endl;
+    //cout << " Nsplits= " << nsplits << endl;
     
     parton_list.clear();
-    cout << "#EVENT= " << iEv << endl;
+    if (iEv % 100 == 0) {
+      cout << "#EVENT= " << iEv << endl;
+      
+      //Print Hist
+      std::ostringstream flund;
+      flund << "primary_lund_alphasconstant_" << alphas_constant << "simplesplitting_" << simple_splitting << ".dat";
+      std::ofstream lundfile(flund.str().c_str(),std::ios_base::binary);
   
+      for (unsigned int a=0; a<lund_nbins; a++) {
+        double t_bincen = double(a)*t_binsize+t_binsize/2.;
+        double z_spread = log(1.-exp(-(t_bincen+log(2.)))) + (t_bincen+log(2.));
+        //cout << " z_spread= " << z_spread << " t_bincen= " << t_bincen << endl;
+        for (unsigned int b=0; b<lund_nbins; b++) {
+          double normal_bin_area = t_binsize * z_binsize;
+          lundfile << double(a)*t_binsize+t_binsize/2. << " " << double(b)*z_binsize+z_binsize/2. << " " << lund_hist[a][b]/double(iEv) << " " << lund_hist[a][b]/double(iEv)/normal_bin_area << endl;
+        }
+        lundfile << endl;
+      }
+      lundfile.close();
+      
+    }
+ 
   //End Event Loop
   }
 
+  //Print Hist
+  std::ostringstream flund;
+  flund << "primary_lund_alphasconstant_" << alphas_constant << "simplesplitting_" << simple_splitting << ".dat";
+  std::ofstream lundfile(flund.str().c_str(),std::ios_base::binary);
+  
+  double maxspread=6.14344;
+  for (unsigned int a=0; a<lund_nbins; a++) {
+    double t_bincen = double(a)*t_binsize+t_binsize/2.;
+    double z_spread = log(1.-exp(-(t_bincen+log(2.)))) + (t_bincen+log(2.));
+    //cout << " z_spread= " << z_spread << " t_bincen= " << t_bincen << endl;
+    for (unsigned int b=0; b<lund_nbins; b++) {
+      double bin_area=t_binsize * z_binsize * maxspread/z_spread;
+      double normal_bin_area = t_binsize * z_binsize;
+      lundfile << double(a)*t_binsize+t_binsize/2. << " " << double(b)*z_binsize+z_binsize/2. << " " << lund_hist[a][b]/double(Nev) << " " << lund_hist[a][b]/double(Nev)/normal_bin_area << " " << lund_hist[a][b]/double(Nev)/bin_area << endl;
+    }
+      lundfile << endl;
+  }
+  lundfile.close();
   
   return 0;
 }
