@@ -99,8 +99,10 @@ int main(int argc, char** argv) {
           int mom=parton_list[iP].mom();
 	  t1=parton_list[mom].virt();
         }
+        double unconst_t1=t1;
 
-	//Correct maximum allowed virtualities (sister dependent!)
+/*
+        //Correct maximum allowed virtualities (sister dependent!)
         double kin_maxt=pow(parton_list[iP].p().t(),2.);
         if (kin_maxt<t1) {
 	  //cout << " kin_maxt = " << kin_maxt << "t1= " << t1 << endl;
@@ -116,16 +118,16 @@ int main(int argc, char** argv) {
 			  -parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt;
           if (sum_maxt<t1) t1=sum_maxt;
           if (sum_maxt<0) { cout << " NEGATIVE SUM MAX T= " << sum_maxt << endl << endl; sum_maxt=t0; }
-          //cout << " kin_maxt= " << kin_maxt << " sum_maxt= " << sum_maxt << endl;
+          cout << " kin_maxt= " << kin_maxt << " sum_maxt= " << sum_maxt << endl;
           //cout << " first piece= " << parton_list[iP].z()*parton_list[mom].virt() << " second piece= " << parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt << endl;
-	  //cout << " mom virt= " << parton_list[mom].virt() << " sis virt= " << sis_virt << endl;
+	  cout << " mom virt= " << parton_list[mom].virt() << " sis virt= " << sis_virt << endl;
 	}
+*/
 
         double R=dis(gen);
 
-        if (iter!=0 && t1>2.*t0) prev_sudakov=Sudakov(t1,t0);
-        if (t1<2.*t0) prev_sudakov=0.; 
-        if (R>prev_sudakov/lowest_sudakov && t1>2.*t0)
+        if (iter!=0) prev_sudakov=Sudakov(t1,t0);
+        if (R > prev_sudakov/lowest_sudakov && t1>2.*t0 && R > Sudakov(t1,t0))
         {
           //Generate t
           double t2_temp=generate_t2(t0,t1,R,log(prev_sudakov));
@@ -177,7 +179,7 @@ int main(int argc, char** argv) {
 	  parton_list[iP].set_d2(parton_list.size()-1); 
 	  
 	  //Assign parton virtuality
-          //cout << " t= " << t2 << " z= " << xi << endl;
+          cout << " t= " << t2 << " z= " << xi << endl;
           //Fill Hist
 	  if (parton_list[iP].stat()==2) {
 	    int tbin=int(log(t2/2./t0)/t_binsize);
@@ -196,12 +198,13 @@ int main(int argc, char** argv) {
 	 
         }
         else {
-          //cout << " freezing with max virt= " << t1 << endl;
+          cout << " freezing with max virt= " << t1 << endl << endl;
           parton_list[iP].set_stat(-1);
           parton_list[iP].set_d1(-1);
           parton_list[iP].set_d2(-1);
           continue;
 	}
+        cout << endl;
 
       }
 
