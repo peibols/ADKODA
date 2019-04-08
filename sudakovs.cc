@@ -55,6 +55,7 @@ double Sudakov_log(double t, double t0)
   IntegrationWorkspace wsp1(limit);
   IntegrationWorkspace wsp2(limit);
 
+  //cout << " new sudakov \n";
   auto outer = make_gsl_function( [&](double tp) {
     double z_lo=t0/tp;
     double z_hi=1.-t0/tp;
