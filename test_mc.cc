@@ -36,10 +36,6 @@ int main(int argc, char** argv) {
   double Pzin=0.;
   double Pminusin=1./sqrt(2.)*(Ein-Pzin);
   double Pplusin=1./sqrt(2.)*(Ein+Pzin);
-  //readjust tmax
-  t_max=2.*Pplusin*Pminusin-Pxin*Pxin-Pyin*Pyin;
-  double zmin=t0/t_max;
-  cout << " tmax= " << t_max << endl;
 
   //double biggest_angle=sqrt(t_max/Ein/Ein/zmin/(1.-zmin));
 
@@ -53,11 +49,6 @@ int main(int argc, char** argv) {
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(0.,1.);
 
-  double lowest_sudakov=Sudakov(2.*t0,t0);
-  double highest_sudakov=Sudakov(t_max,t0);
-  cout << " lowest_sudakov= " << lowest_sudakov << endl;
-  //cout << " biggest angle= " << biggest_angle << endl;
-
   //Parton Shower
   for (int iEv=1; iEv<=Nev; iEv++) {
  
@@ -66,26 +57,16 @@ int main(int argc, char** argv) {
     vector<Parton> parton_list;
     
     //Initial Hard Parton
-    FourVector phard(Pxin, Pyin, Pminusin, Pplusin);    
+    FourVector phard(Pxin, Pyin, Pzin, Ein);    
     FourVector x;
     Parton hard_parton( Parton(21,2,phard,x) );
-    hard_parton.set_z(1.);
     hard_parton.set_mom(-3);
 
     parton_list.push_back(hard_parton);
 
-    double t1=t_max;
-    double x1=x_max;
-
-    double t2=-1000.;
-    double x2=-1000.;
-   
-    double prev_sudakov=highest_sudakov;
-
     int iter=0;
    
-    bool changes=1; 
-    
+    bool changes=1;  
     while (true) {
       changes=0;
       //Scan the parton list to see whether there are partons that can split (status=1)
@@ -97,159 +78,172 @@ int main(int argc, char** argv) {
         if (parton_list[iP].stat()<0) continue;
         changes=1;
 
-        if (iter==0) { t1=t_max; }
-        else {
-          int mom=parton_list[iP].mom();
-	  t1=parton_list[mom].virt();
-        }
-        double unconst_t1=t1;
-
-
-        //Correct maximum allowed virtualities (sister dependent!)
-        double kin_maxt=pow(1./sqrt(2.)*(parton_list[iP].p().t()+parton_list[iP].p().z()),2.);
-        if (kin_maxt<t1) {
-	  //cout << " kin_maxt = " << kin_maxt << "t1= " << t1 << endl;
-          t1=kin_maxt;
-        }
-        if (iter!=0) {
+	//If first iteration
+        if (iter==0)
+	{
+	  t1=t_max;				//Max virtuality is that of hard scattering (Ein^2) 
+          EvolveParton(parton_list[iP],1);	//Evolve the parton knowing its energy
+	}
+        else
+        {
           int mom=parton_list[iP].mom();
           int sister=parton_list[mom].d1();
           if (sister==iP) sister=parton_list[mom].d2();
-          double sis_virt=2.*t0;
-          if (parton_list[sister].virt()!=-1000 && parton_list[sister].d1()!=-1) sis_virt=parton_list[sister].virt();
-          double sum_maxt=parton_list[iP].z()*parton_list[mom].virt()
-			  -parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt
-			  -1./(1.-parton_list[iP].z())*t0;
-          //if (sum_maxt<t1) t1=sum_maxt;
-          //cout << endl;
-	  if (sum_maxt<0) { 
-	    sum_maxt=2.*t0;
-	    //cout << " z= " << parton_list[iP].z() << endl;
-	    //cout << " NEGATIVE SUM MAX T= " << sum_maxt << endl;
-	    //cout << " 1st piece= " << parton_list[iP].z()*parton_list[mom].virt() << endl; 
-	    //cout << " 2nd piece= " << -parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt << endl;
-	    //cout << " 3rd piece= " << -1./(1.-parton_list[iP].z())*t0;
-	    //exit(0);
-	  }
-	  if (sum_maxt<t1) t1=sum_maxt;
-	  double eb=1./sqrt(2.)*(parton_list[iP].p().t()+parton_list[iP].p().z());
-          double ea=1./sqrt(2.)*(parton_list[mom].p().t()+parton_list[mom].p().z());
-          if (sum_maxt>ea*ea*parton_list[iP].z() && sum_maxt>2.*t0) {
-	    cout << " z= " << parton_list[iP].z() << endl; 
-	    cout << " kin_maxt= " << kin_maxt << " sum_maxt= " << sum_maxt << endl;
-            cout << " eb*ea= " << eb*ea << endl; 
-            cout << " z ea^2 = " << ea*ea*parton_list[iP].z() << endl;
-	    //cout << " first piece= " << parton_list[iP].z()*parton_list[mom].virt() << " second piece= " << parton_list[iP].z()/(1.-parton_list[iP].z())*sis_virt << endl;
-	    cout << " mom virt= " << parton_list[mom].virt() << " sis virt= " << sis_virt << endl;
-	  }
-          cout << " unconst_t1= " << unconst_t1 << " kinmaxt= " << kin_maxt << " sum_maxt= " << sum_maxt << endl;
-	}
+        
+	  double ma2=parton_list[mom].virt();  
+	  double mbmax=min(sqrt(ma2),parton_list[iP].p.t());
+          double mcmax=min(sqrt(ma2),parton_list[sister].p.t());
 
-        double R=dis(gen);
+	  double Eb, Ec, pb, pc, zb, zc;
 
-	//cout << " t1= " << t1 << endl;
-        if (iter!=0 && t1>2.*t0) prev_sudakov=Sudakov(t1,t0);
-        if (R > prev_sudakov/lowest_sudakov && t1>2.*t0)
-        {
-          //Generate t
-	  // Use hit and miss method, to compare against CDF method
-          double t2_temp=generate_t2(t0,t1,R,log(prev_sudakov));
-	 
-/*
-	  double mcsuda=0.;
-          double randian=1.;
-          double t2_rand=-1.;
-          do {
-            randian=dis(gen);
-            t2_rand=2.*t0+dis(gen)*(t1-2.*t0);
-            mcsuda=prev_sudakov/Sudakov(t2_rand,t0);
-            cout << " mcsuda= " << mcsuda << endl;
-	  } while (mcsuda<randian);
-	  cout << "t1= " << t1 << " t2rand= " << t2_rand << endl;
-	  double t2_temp=t2_rand;
-*/
-          if (t2_temp>2.*t0) t2=t2_temp;
-          else {
-	    cout << " TRIGGERED \n \n";
-            parton_list[iP].set_stat(-1);
-            parton_list[iP].set_d1(-1);
-            parton_list[iP].set_d2(-1);
-            continue;
-          }
-
-          //Generate z
-          double Rp=dis(gen);
-          double xi=generate_x2(t0,t2,Rp);
-
-	  //cout << " Splitting happened " << endl;
-	  nsplits+=1;
-
-	  //Generate daughters (provisional tri-momentum, until their virtualities and azimuthal angle are generated
-          FourVector p1(0.,0.,0.,xi*parton_list[iP].p().t());
-	  FourVector p2(0.,0.,0.,(1.-xi)*parton_list[iP].p().t());
-	  FourVector x1;
-	  FourVector x2;
-
-	  Parton d1 = Parton(21,1,p1,x1);
-	  Parton d2 = Parton(21,1,p2,x2);
-	  
-          //Follow the heir
-	  if (parton_list[iP].stat()==2) {
-            if (xi>0.5) {
-	      d1.set_stat(2);
-	    }
-	    else { 	
-	      d2.set_stat(2);
-            }
-          }
-	
-	  d1.set_mom(iP);
-	  d2.set_mom(iP);
-          d1.set_z(xi);
-	  d2.set_z(1.-xi);
-
-	  parton_list.push_back(d1);         
-	  parton_list[iP].set_d1(parton_list.size()-1); 
+	  bool evolve_b=1, evolve_c=1;
+	  do {
+            //Evolve this parton
+	    if (evolve_b) EvolveParton(parton_list[iP],mbmax*mbmax,0);
           
-	  parton_list.push_back(d2);         
-	  parton_list[iP].set_d2(parton_list.size()-1); 
-	  
-	  //Assign parton virtuality
-          //cout << " t= " << t2 << " z= " << xi << endl;
-          //Fill Hist
-	  if (parton_list[iP].stat()==2) {
-	    int tbin=int(log(t2/2./t0)/t_binsize);
-	    int zbin=int(log(1./xi)/z_binsize);
-	    if (tbin < lund_nbins && zbin < lund_nbins) {
-	      lund_hist[tbin][zbin]+=1.;
-	      t_norm[zbin]+=1.;
+	    //Evolve its sister
+            if (evolve_c) EvolveParton(parton_list[sister],mcmax*mcmax,0);
+
+	    evolve_b=0, evolve_c=0;
+
+	    //Construct actual energies
+            double mb2=parton_list[iP].virt();
+            double mc2=parton_list[sister].virt();
+
+	    double rb=(ma2+(mc2-mb2)-sqrt(pow(ma2-mb2-mc2,2.)-4.*mb2*mc2))/2./ma2;
+	    double rc=(ma2-(mc2-mb2)-sqrt(pow(ma2-mb2-mc2,2.)-4.*mb2*mc2))/2./ma2;
+        
+            Eb=Eb0+(rc*Ec0-rb*Eb0);
+            Ec=Ec0-(rc*Ec0-rb*Eb0);
+
+	    pb=sqrt(Eb*Eb-mb2);
+            pc=sqrt(Ec*Ec-mc2);
+
+	    //Check z constraints
+            bool zb_ok=1;
+            bool zc_ok=1;
+
+            zb=parton_list[iP].z();
+            double zb_min=1./2.*(1.-pb/Eb);
+            double zb_max=1./2.*(1.+pb/Eb);
+	    if (zb<zb_min || zb>zb_max) zb_ok=0; 
+
+            zc=parton_list[sister].z();
+            double zc_min=1./2.*(1.-pc/Ec);
+            double zc_max=1./2.*(1.+pc/Ec);
+	    if (zc<zc_min || zc>zc_max) zc_ok=0;
+
+	    //Check m constraints
+	    bool mb_ok=1;
+            bool mc_ok=1;
+	    if (sqrt(mb2)+sqrt(mc2)>sqrt(ma2)) {
+              double ratb=sqrt(mb2)/mbmax;
+	      double ratc=sqrt(mc2)/mcmax;
+	      if (ratb>ratc) mb_ok=0;
+	      else mc_ok=0;
 	    }
-	    //Angle 
-            double angle_dla=sqrt(t2/(xi*(1.-xi))/pow(parton_list[iP].p().t(),2.));
-            //cout << " t= " << t2 << " z= " << xi << " angle_dla= " << angle_dla << endl;
-          }
 
-	  parton_list[iP].set_virt(t2);
-	  parton_list[iP].set_stat(-1);
-	 
-        }
-        else {
-          //cout << " freezing with max virt= " << t1 << endl << endl;
-          parton_list[iP].set_virt(2.*t0);
-          parton_list[iP].set_stat(-1);
-          parton_list[iP].set_d1(-1);
-          parton_list[iP].set_d2(-1);
-          continue;
-	}
-        //cout << endl;
+	    //Determine whether need to evolve further
+            if (zb_ok==0 && zc_ok==1) evolve_b=1;
+	    if (zb_ok==1 && zc_ok==0) evolve_c=1;
+	    if (zb_ok==0 && zc_ok==0) {
+              double ap_b=SOMETHING;
+	      double ap_c=SOMETHING_ELSE;
+	      if (ap_b>ap_c) evolve_b=1;
+	      else evolve_c=1; 
+	    }
+	    if (zb_ok==1 && zc_ok==1) {
+              if (mb_ok==0) evolve_b=1;
+	      if (mc_ok==0) evolve_c=1;
+	    }
 
-      }
+	    //Update maximum virtualities
+	    mbmax=sqrt(mb2);
+	    mcmax=sqrt(mc2);
 
+            //Make sure we don't evolve frozen partons
+	    if (parton_list[iP].status()<0) evolve_b=0;
+	    if (parton_list[sister].status()<0) evolve_c=0;
+
+	  } while (evolve_b==1 || evolve_c==1);
+
+	  //Update energy of splitters
+	  parton_list[iP].set_en(Eb);
+	  parton_list[sister].set_en(Ec); 
+	   
+          //Introduce daughters of b
+	  if (parton_list[iP].status()>0) {
+            FourVector p1(0.,0.,0.,zb*Eb);
+	    FourVector p2(0.,0.,0.,(1.-zb)*Eb);
+	    FourVector x1;
+	    FourVector x2;
+
+	    Parton d1 = Parton(21,1,p1,x1);
+	    Parton d2 = Parton(21,1,p2,x2);
+	  
+            //Follow the heir
+	    if (parton_list[iP].stat()==2) {
+              if (zb>0.5) {
+	        d1.set_stat(2);
+	      }
+	      else { 	
+	        d2.set_stat(2);
+              }
+            }
+	
+	    d1.set_mom(iP);
+	    d2.set_mom(iP);
+
+	    parton_list.push_back(d1);         
+	    parton_list[iP].set_d1(parton_list.size()-1); 
+          
+	    parton_list.push_back(d2);         
+	    parton_list[iP].set_d2(parton_list.size()-1);
+	  }
+
+	  //Introduce daughters of c 
+	  if (parton_list[sister].status()>0) {
+            FourVector p1(0.,0.,0.,zc*Ec);
+	    FourVector p2(0.,0.,0.,(1.-zc)*Ec);
+	    FourVector x1;
+	    FourVector x2;
+
+	    Parton d1 = Parton(21,1,p1,x1);
+	    Parton d2 = Parton(21,1,p2,x2);
+	  
+            //Follow the heir
+	    if (parton_list[sister].stat()==2) {
+              if (zc>0.5) {
+	        d1.set_stat(2);
+	      }
+	      else { 	
+	        d2.set_stat(2);
+              }
+            }
+	
+	    d1.set_mom(sister);
+	    d2.set_mom(sister);
+
+	    parton_list.push_back(d1);         
+	    parton_list[sister].set_d1(parton_list.size()-1); 
+          
+	    parton_list.push_back(d2);         
+	    parton_list[sister].set_d2(parton_list.size()-1);
+	  }
+
+	  //Deactivate splitted partons
+	  parton_list[iP].set_status(-1);
+          parton_list[sister].set_status(-1); 
+	  
+        } //End if iter!=0 
+      
+      } //End parton_list loop
+        
       iter++;
 
       if (changes==0) break;
 
-    }
+    } //Infinite changes loop
     
     //cout << " Parton List Size= " << parton_list.size() << endl;
     //cout << " Nsplits= " << nsplits << endl;
