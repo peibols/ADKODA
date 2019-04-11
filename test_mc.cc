@@ -13,7 +13,7 @@ int alphas_constant;
 int simple_splitting;
 
 double int_Pgg_kernel(double z);
-void EvolveParton(Parton parton, double tmax, bool iter);
+void EvolveParton(Parton& parton, double tmax, bool iter);
 
 int main(int argc, char** argv) {
 
@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
       for (int iP=0; iP<size_now; iP++)
       {
 	//cout << " ip= " << iP << " status= " << parton_list[iP].stat() << endl; 
+
 	//Parton parton=parton_list[iP];
         if (parton_list[iP].stat()<0) continue;
         changes=1;
@@ -77,8 +78,43 @@ int main(int argc, char** argv) {
 	//If first iteration
         if (iter==0)
 	{
+          cout << " First iteration ";
 	  double mmax2=t_max;				//Max virtuality is that of hard scattering (Ein^2) 
           EvolveParton(parton_list[iP],mmax2,1);
+          double zb=parton_list[iP].z();
+	  double Eb=parton_list[iP].p().t();
+	  cout << " zb= " << zb << " virt= " << parton_list[iP].virt() << endl << endl;
+	  //Add daughters
+	  if (parton_list[iP].stat()>0) {
+            FourVector p1(0.,0.,0.,zb*Eb);
+	    FourVector p2(0.,0.,0.,(1.-zb)*Eb);
+	    FourVector x1;
+	    FourVector x2;
+
+	    Parton d1 = Parton(21,1,p1,x1);
+	    Parton d2 = Parton(21,1,p2,x2);
+	  
+            //Follow the heir
+	    if (parton_list[iP].stat()==2) {
+              if (zb>0.5) {
+	        d1.set_stat(2);
+	      }
+	      else { 	
+	        d2.set_stat(2);
+              }
+            }
+	
+	    d1.set_mom(iP);
+	    d2.set_mom(iP);
+
+	    parton_list.push_back(d1);         
+	    parton_list[iP].set_d1(parton_list.size()-1); 
+          
+	    parton_list.push_back(d2);         
+	    parton_list[iP].set_d2(parton_list.size()-1);
+	  }
+	  parton_list[iP].set_stat(-1);
+
 	}
         else
         {

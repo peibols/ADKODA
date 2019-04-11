@@ -20,32 +20,51 @@ double int_Pgg_kernel(double z);
 double alpha_s(double t);
 double P_gg(double z);
 
-void EvolveParton(Parton parton, double tmax, bool iter)
+void EvolveParton(Parton& parton, double tmax, bool iter)
 {
 
   double E=parton.p().t();
   double m_min=sqrt(2.);
   double cutoff=1./2.*(1.-sqrt(E*E-m_min*m_min)/E); 
 
-  double t_temp, z_temp; 
+  int counter=0;
+  cout << " cutoff= " << cutoff << " E= " << E << " m_min= " << m_min << " tmax= " << tmax << endl;
+  double t_temp=tmax;
+  double z_temp=1.; 
   while (true) {
-    
+   
+    if (t_temp<m_min*m_min) break;
+ 
     //Pick t
     double Rt=dis(gen);
-    double t_temp=inv_prim_envel(prim_envel(tmax,cutoff)+log(Rt),cutoff);
+    cout << " prim_envel= " << prim_envel(tmax,cutoff) << endl;
+    t_temp=inv_prim_envel(prim_envel(tmax,cutoff)+log(Rt),cutoff);
+    if (t_temp<m_min*m_min) {
+      cout << " freezing with t_temp= " << t_temp << endl;
+      break;
+    }
 
     //Pick z
+    //Update cutoff
+    cutoff=1./2.*(1.-sqrt(E*E-t_temp)/E);
+    cout << " updated cutoff= " << cutoff << endl;
     double Rz=dis(gen);
-    double z_temp=inv_zprim_envel(zprim_envel(cutoff)+Rz*(zprim_envel(1.-cutoff)-zprim_envel(cutoff)));     
+    z_temp=inv_zprim_envel(zprim_envel(cutoff)+Rz*(zprim_envel(1.-cutoff)-zprim_envel(cutoff)));     
 
     //Evaluate ratio
     double Rhm=dis(gen);
     double ratio=integrand(t_temp,z_temp)/envel(t_temp,z_temp); 
 
+    cout << " t_temp= " << t_temp << " z_temp= " << z_temp << endl;
+    cout << " ratio= " << ratio << " Rhm= " << Rhm << endl;
     if (ratio>Rhm) break;
+    counter++;
+    tmax=t_temp;
+    if (counter>50) exit(0);
   }
 
   //Put on-mass-shell if below m_min
+  cout << " t_temp after= " << t_temp << endl << endl;
   if (t_temp<m_min*m_min) t_temp=0., z_temp=1., parton.set_stat(-1);
 
   parton.set_virt(t_temp);
