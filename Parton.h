@@ -110,6 +110,9 @@ class Parton : protected fjcore::PseudoJet
     void set_p(const FourVector& p);
     const FourVector p();
 
+    void set_en(const double en);
+    double en();	
+
     void set_x(const FourVector& x);
     const FourVector x();
 

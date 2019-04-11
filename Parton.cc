@@ -74,6 +74,11 @@ const FourVector Parton::p()
   return _p;
 }
 
+double Parton::en()
+{
+  return _p.t();
+}
+
 void Parton::set_x(const FourVector& x)
 {
   _x=x;

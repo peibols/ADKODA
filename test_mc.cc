@@ -9,12 +9,11 @@
 
 using namespace std;
 
-double Sudakov(double t, double t0);
-double generate_t2(double t0, double t1, double R, double numer);
-double generate_x2(double t0, double t2, double R);
-
 int alphas_constant;
 int simple_splitting;
+
+double int_Pgg_kernel(double z);
+void EvolveParton(Parton parton, double tmax, bool iter);
 
 int main(int argc, char** argv) {
 
@@ -26,28 +25,25 @@ int main(int argc, char** argv) {
   int Nev=atoi(argv[1]);
 
   //Parameters  
-  double t_max=1000.;
-  double x_max=1.;
-  double x_min=0.00001;
   double t0=2.;
-  double Ein=100.;
-  double Pxin=50.;
+  double Ein=20.;
+  double Pxin=0.;
   double Pyin=0.;
   double Pzin=0.;
   double Pminusin=1./sqrt(2.)*(Ein-Pzin);
   double Pplusin=1./sqrt(2.)*(Ein+Pzin);
 
-  //double biggest_angle=sqrt(t_max/Ein/Ein/zmin/(1.-zmin));
+  //Set tmax
+  double t_max=Ein*Ein;
+
+  double x_max=1.;
+  double x_min=0.00001;
 
   int lund_nbins=100;
   double lund_hist[100][100]={{0.}};
   double t_norm[100]={0.};
   double t_binsize=log(t_max/2./t0)/double(lund_nbins);
   double z_binsize=log(1./x_min)/double(lund_nbins); 
-
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(0.,1.);
 
   //Parton Shower
   for (int iEv=1; iEv<=Nev; iEv++) {
@@ -81,8 +77,8 @@ int main(int argc, char** argv) {
 	//If first iteration
         if (iter==0)
 	{
-	  t1=t_max;				//Max virtuality is that of hard scattering (Ein^2) 
-          EvolveParton(parton_list[iP],1);	//Evolve the parton knowing its energy
+	  double mmax2=t_max;				//Max virtuality is that of hard scattering (Ein^2) 
+          EvolveParton(parton_list[iP],mmax2,1);
 	}
         else
         {
@@ -91,10 +87,12 @@ int main(int argc, char** argv) {
           if (sister==iP) sister=parton_list[mom].d2();
         
 	  double ma2=parton_list[mom].virt();  
-	  double mbmax=min(sqrt(ma2),parton_list[iP].p.t());
-          double mcmax=min(sqrt(ma2),parton_list[sister].p.t());
+	  double mbmax=min(sqrt(ma2),parton_list[iP].p().t());
+          double mcmax=min(sqrt(ma2),parton_list[sister].p().t());
 
 	  double Eb, Ec, pb, pc, zb, zc;
+	  double Eb0=parton_list[iP].p().t();
+	  double Ec0=parton_list[sister].p().t();
 
 	  bool evolve_b=1, evolve_c=1;
 	  do {
@@ -147,8 +145,14 @@ int main(int argc, char** argv) {
             if (zb_ok==0 && zc_ok==1) evolve_b=1;
 	    if (zb_ok==1 && zc_ok==0) evolve_c=1;
 	    if (zb_ok==0 && zc_ok==0) {
-              double ap_b=SOMETHING;
-	      double ap_c=SOMETHING_ELSE;
+              //Integral of AP kernel (no alphas) for b
+	      double c_zb_max=max(zb,zb_max);
+	      double c_zb_min=min(zb,zb_min);
+	      double ap_b=(int_Pgg_kernel(c_zb_max)-int_Pgg_kernel(c_zb_min))/(int_Pgg_kernel(zb_max)-int_Pgg_kernel(zb_min));
+              //Integral of AP kernel (no alphas) for c
+	      double c_zc_max=max(zc,zc_max);
+	      double c_zc_min=min(zc,zc_min);
+	      double ap_c=(int_Pgg_kernel(c_zc_max)-int_Pgg_kernel(c_zc_min))/(int_Pgg_kernel(zc_max)-int_Pgg_kernel(zc_min));
 	      if (ap_b>ap_c) evolve_b=1;
 	      else evolve_c=1; 
 	    }
@@ -162,17 +166,17 @@ int main(int argc, char** argv) {
 	    mcmax=sqrt(mc2);
 
             //Make sure we don't evolve frozen partons
-	    if (parton_list[iP].status()<0) evolve_b=0;
-	    if (parton_list[sister].status()<0) evolve_c=0;
+	    if (parton_list[iP].stat()<0) evolve_b=0;
+	    if (parton_list[sister].stat()<0) evolve_c=0;
 
 	  } while (evolve_b==1 || evolve_c==1);
 
 	  //Update energy of splitters
-	  parton_list[iP].set_en(Eb);
-	  parton_list[sister].set_en(Ec); 
+	  parton_list[iP].reset_momentum(0.,0.,0.,Eb);
+	  parton_list[sister].reset_momentum(0.,0.,0.,Ec);
 	   
           //Introduce daughters of b
-	  if (parton_list[iP].status()>0) {
+	  if (parton_list[iP].stat()>0) {
             FourVector p1(0.,0.,0.,zb*Eb);
 	    FourVector p2(0.,0.,0.,(1.-zb)*Eb);
 	    FourVector x1;
@@ -202,7 +206,7 @@ int main(int argc, char** argv) {
 	  }
 
 	  //Introduce daughters of c 
-	  if (parton_list[sister].status()>0) {
+	  if (parton_list[sister].stat()>0) {
             FourVector p1(0.,0.,0.,zc*Ec);
 	    FourVector p2(0.,0.,0.,(1.-zc)*Ec);
 	    FourVector x1;
@@ -232,8 +236,8 @@ int main(int argc, char** argv) {
 	  }
 
 	  //Deactivate splitted partons
-	  parton_list[iP].set_status(-1);
-          parton_list[sister].set_status(-1); 
+	  parton_list[iP].set_stat(-1);
+          parton_list[sister].set_stat(-1); 
 	  
         } //End if iter!=0 
       
