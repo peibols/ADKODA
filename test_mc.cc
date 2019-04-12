@@ -132,6 +132,10 @@ int main(int argc, char** argv) {
 
 	  bool evolve_b=1, evolve_c=1;
 	  do {
+
+	    //Evolve the two sisters
+            EvolveSisters(parton_list[iP],parton_list[sister],mbmax*mbmax,mcmax*mcmax,evolve_b,evolve_c);
+
             //Evolve this parton
 	    if (evolve_b) EvolveParton(parton_list[iP],mbmax*mbmax,0);
           

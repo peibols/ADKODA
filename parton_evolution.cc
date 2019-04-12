@@ -20,6 +20,104 @@ double int_Pgg_kernel(double z);
 double alpha_s(double t);
 double P_gg(double z);
 
+void EvolveSisters(Parton& parton_b, Parton& parton_c, double tmax_b, double t_maxc, bool evolve_b, bool evolve_c)
+{
+  double m_min=sqrt(2.);
+
+  double Eb0=parton_b.p().t(); 
+  double Ec0=parton_c.p().t();
+
+  double cutoff_b, cutoff_c;
+  if (tmax_b>m_min*m_min) cutoff_b= 1./2.*(1.-sqrt(Eb0*Eb0-m_min*m_min)/Eb0);
+  if (tmax_c>m_min*m_min) cutoff_c= 1./2.*(1.-sqrt(Ec0*Ec0-m_min*m_min)/Ec0);
+ 
+  double t_temp_b=tmax_b; 
+  double t_temp_c=tmax_c;
+
+  double z_temp_b=1.;
+  double z_temp_c=1.;
+
+  bool evolve_b=1;
+  bool evolve_c=1;
+  do {
+   
+    if (t_max_b<m_min*m_min) {
+      evolve_b=0;
+      t_temp_b=0.;
+    }
+
+    if (t_max_c<m_min*m_min) {
+      evolve_c=0;
+      t_temp_c=0.;
+    }
+     
+    if (evolve_b==1) {
+      //Pick tb
+      double Rt_b=dis(gen);
+      t_temp_b=inv_prim_envel(prim_envel(tmax_b,cutoff_b)+log(Rt_b),cutoff_b);
+      if (t_temp_b<m_min*m_min) {
+        cout << " freezing b with t_temp= " << t_temp_b << endl;
+      }
+    }
+    
+    if (evolve_c==1) {  
+      //Pick tc
+      double Rt_c=dis(gen);
+      t_temp_c=inv_prim_envel(prim_envel(tmax_c,cutoff_c)+log(Rt_c),cutoff_c);
+      if (t_temp_c<m_min*m_min) {
+        cout << " freezing c with t_temp= " << t_temp_c << endl;
+      }
+    }
+
+    //Compute actual energies
+    double rb=(tmom+(t_temp_c-t_temp_b)-sqrt(pow(tmom-t_temp_b-t_temp_c,2.)-4.*t_temp_b*t_temp_c))/2./tmom;
+    double rc=(tmom-(t_temp_c-t_temp_b)-sqrt(pow(tmom-t_temp_b-t_temp_c,2.)-4.*t_temp_b*t_temp_c))/2./tmom;
+    
+    Eb=Eb0+(rc*Ec0-rb*Eb0);
+    Ec=Ec0-(rc*Ec0-rb*Eb0);
+    pb=sqrt(Eb*Eb-t_temp_b);
+    pc=sqrt(Ec*Ec-t_temp_c);
+
+    //Update cutoffs
+    cutoff_b=1./2.*(1.-sqrt(Eb*Eb-t_temp_b)/Eb);    
+    cutoff_c=1./2.*(1.-sqrt(Ec*Ec-t_temp_c)/Ec);
+
+    if (evolve_b==1) {
+      //Pick zb
+      double Rz_b=dis(gen);
+      z_temp_b=inv_zprim_envel(zprim_envel(cutoff_b)+Rz_b*(zprim_envel(1.-cutoff_b)-zprim_envel(cutoff_b)));     
+      //Evaluate ratio of b
+      double Rhm_b=dis(gen);
+      double ratio_b=integrand(t_temp_b,z_temp_b)/envel(t_temp_b,z_temp_b);
+      if (ratio_b>Rhm) evolve_b=0; 
+    }
+
+    if (evolve_c==1) {
+      //Pick zb
+      double Rz_c=dis(gen);
+      z_temp_c=inv_zprim_envel(zprim_envel(cutoff_c)+Rz_c*(zprim_envel(1.-cutoff_c)-zprim_envel(cutoff_c)));     
+      //Evaluate ratio of b
+      double Rhm_c=dis(gen);
+      double ratio_c=integrand(t_temp_c,z_temp_c)/envel(t_temp_c,z_temp_c);
+      if (ratio_c>Rhm_c) evolve_c=0; 
+    }
+
+    //Update maximum virtualities
+    t_max_b=t_temp_b;
+    t_max_c=t_temp_c;
+
+  } while (evolve_b==1 || evolve_c==1);
+
+  //Put on-mass-shell if below m_min
+  if (t_temp_b<m_min*m_min) t_temp_b=0., z_temp_b=1., parton_b.set_stat(-1);
+  parton_b.set_virt(t_temp_b);
+  parton_b.set_z(z_temp_b);
+  
+  if (t_temp_c<m_min*m_min) t_temp_c=0., z_temp_c=1., parton_c.set_stat(-1);
+  parton_c.set_virt(t_temp_c);
+  parton_c.set_z(z_temp_c);
+}
+
 void EvolveParton(Parton& parton, double tmax, bool iter)
 {
 
