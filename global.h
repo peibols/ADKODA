@@ -3,5 +3,6 @@
 
 extern int alphas_constant;
 extern int simple_splitting;
+extern double t0;
 
 #endif
