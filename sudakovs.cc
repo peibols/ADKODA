@@ -57,8 +57,10 @@ double Sudakov_log(double t, double t0)
 
   //cout << " new sudakov \n";
   auto outer = make_gsl_function( [&](double tp) {
-    double z_lo=t0/tp;
-    double z_hi=1.-t0/tp;
+    //double z_lo=t0/tp;
+    //double z_hi=1.-t0/tp;
+    double z_lo=1./2.*(1.-sqrt(1.-4.*t0/tp));
+    double z_hi=1./2.*(1.+sqrt(1.-4.*t0/tp));
     //z_lo=0.00001;
     //z_hi=1.;
     auto inner = make_gsl_function( [&](double z) {return -1./tp * alpha_s(tp*(z*(1.-z)))/(2.*M_PI) * P_gg(z) ;} );
@@ -67,12 +69,30 @@ double Sudakov_log(double t, double t0)
     return inner_result;
   } );
 
-  double t_lo=2.*t0;
+  double t_lo=4.*t0;
   double t_hi=t;
   gsl_integration_qags(outer, t_lo, t_hi, 0, 1e-7, limit,
 		       wsp2, &result, &abserr);  
 
   return result;
+}
+
+double Splitting(double t, double t0)
+{
+  size_t limit = 100;
+  double result, abserr;
+
+  IntegrationWorkspace wsp1(limit);
+
+  double z_lo=1./2.*(1.-sqrt(1.-4.*t0/t));
+  double z_hi=1./2.*(1.+sqrt(1.-4.*t0/t));
+  auto inner = make_gsl_function( [&](double z) {return 1./t * alpha_s(t*(z*(1.-z)))/(2.*M_PI) * P_gg(z) ;} );
+
+  gsl_integration_qags(inner, z_lo, z_hi, 0, 1e-7, limit,
+		       wsp1, &result, &abserr);  
+
+  return result;
+
 }
 
 //Compute the Sudakov

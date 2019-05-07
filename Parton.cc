@@ -42,6 +42,7 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x)
   _mass=0.; //Assume gluon only for now
   _virt=-1000.;
   _z=-1000.;
+  _alpha=-1000.;
 }
 
 void Parton::set_id(int id)
@@ -77,6 +78,16 @@ const FourVector Parton::p()
 double Parton::en()
 {
   return _p.t();
+}
+
+double Parton::pplus()
+{
+  return 1./sqrt(2.)*(_p.t()+_p.z());
+}
+
+double Parton::pminus()
+{
+  return 1./sqrt(2.)*(_p.t()-_p.z());
 }
 
 void Parton::set_x(const FourVector& x)
@@ -147,6 +158,16 @@ void Parton::set_z(double z)
 double Parton::z()
 {
   return _z;
+}
+
+void Parton::set_alpha(double alpha)
+{
+  _alpha=alpha;
+}
+
+double Parton::alpha()
+{
+  return _alpha;
 }
 
 #endif

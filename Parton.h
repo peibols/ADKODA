@@ -119,14 +119,22 @@ class Parton : protected fjcore::PseudoJet
     void set_z(double z);
     double z();
 
+    void set_alpha(double alpha);
+    double alpha();
+
+    double pplus();
+    double pminus();
+
   private:
 
     FourVector _p;
     FourVector _x;
+    FourVector _pLC;
     int _id;
     int _stat;
     int _mom, _d1, _d2;
     double _mass;
     double _virt;
     double _z;
+    double _alpha;
 };
