@@ -1,3 +1,6 @@
+#ifndef Parton_H
+#define Parton_H
+
 #include "utils/FourVector.h"
 #include <stdio.h>
 #include <math.h>
@@ -8,6 +11,8 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+
+namespace Adkoda {
 
 using std::ostream;
 
@@ -86,7 +91,11 @@ class Parton : protected fjcore::PseudoJet
 	  
     ~Parton();
 
-    void set_id(int id);
+    void set_cols( int cols[2] ) { _col = cols[0], _acol = cols[1]; }
+    int col() { return _col; } 
+    int acol() { return _acol; } 
+
+    void set_id( int id );
     int id();
     
     void set_stat(int stat);
@@ -98,8 +107,10 @@ class Parton : protected fjcore::PseudoJet
     void set_virt(double virt);
     double virt();
 
-    void set_mom(int mom);
-    int mom();
+    void set_mom1( int mom ) { _mom1 = mom; }
+    int mom1() { return _mom1; }
+    void set_mom2( int mom ) { _mom2 = mom; }
+    int mom2() { return _mom2; }
 
     void set_d1(int d1);
     int d1();
@@ -107,26 +118,25 @@ class Parton : protected fjcore::PseudoJet
     void set_d2(int d2);
     int d2();
 
-    void set_p(const FourVector& p);
-    const FourVector p();
-
-    void set_en(const double en);
-    double en();	
+    FourVector p();
 
     void set_x(const FourVector& x);
     const FourVector x();
 
-    void set_z(double z);
-    double z();
+    bool ColourConnected(Parton& p);
+
+    void display();
 
   private:
 
-    FourVector _p;
     FourVector _x;
+    int _col, _acol;
     int _id;
     int _stat;
-    int _mom, _d1, _d2;
+    int _mom1, _mom2, _d1, _d2;
     double _mass;
-    double _virt;
-    double _z;
 };
+
+} // end namespace Adkoda
+
+#endif // Parton_H
