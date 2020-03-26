@@ -20,7 +20,7 @@ class InPartons {
    std::vector<Parton> PartonList();
    double ME2(int id, double s, double t);
 
- protected:
+  protected:
 
    std::mt19937 gen;
    std::uniform_real_distribution<double> dis;

@@ -1,12 +1,7 @@
-number_events 10000
-# evol_scale: pt (0), m (1), tf (2), theta (3)
-evol_scale 1
-# LO: e-e+2qqbar (0), diparton gun (1)
-parton_gun 0
-# hard_partons: gg 0, qq 1, qg 2
-hard_partons 0
-# COM energy (Shower max scale)
-pt_max 100.0
-# Shower min scale
-pt_min 1.0
+number_events 3
+evol_scale 0          # evol_scale: pt (0), m (1), tf (2), theta (3)
+parton_gun 0          # LO: e-e+2qqbar (0), diparton gun (1)
+hard_partons 0        # hard_partons: gg 0, qq 1, qg 2
+pt_max 100.0          # COM energy (Shower max scale)
+pt_min 1.0            # Shower min scale
 EndOfData

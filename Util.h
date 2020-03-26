@@ -5,6 +5,10 @@
 #define NC (3.0)
 #endif
 
+#ifndef Nf
+#define Nf (3.0)
+#endif
+
 #ifndef TR
 #define TR (0.5)
 #endif
