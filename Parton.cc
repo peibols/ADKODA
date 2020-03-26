@@ -1,12 +1,11 @@
-#ifndef PARTON_H
-#define PARTON_H
-
 #include <iostream>
 #include <complex>
 #include <fstream>
 #include <cmath>
 #include <assert.h>
 #include "Parton.h"
+
+namespace Adkoda {
 
 Parton::~Parton(){}
 
@@ -32,16 +31,41 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x)
 {
   _id=id;
   _stat=stat;
-  _p=p;
+  reset_momentum (p);
   _x=x;
 
   _d1=-1000;
   _d2=-1000;
-  _mom=-1000;
+  _mom1=-1000;
+  _mom2=-1000;
 
-  _mass=0.; //Assume gluon only for now
-  _virt=-1000.;
-  _z=-1000.;
+  _mass=0.; //FIXME Assume all partons massless for the moment 
+
+  _col=-1000;
+  _acol=-1000;
+}
+
+void Parton::display()
+{
+
+  cout << _id << " "
+	<< _stat << " "
+	<< _mom1 << " " << _mom2 << " "
+	<< _d1 << " " << _d2 << " "
+	<< _col << " " << _acol << " "
+	<< p().x() << " "
+	<< p().y() << " "
+	<< p().z() << " "
+	<< p().t() << " "
+	<< _mass << endl;
+}
+
+bool Parton::ColourConnected(Parton& p)
+{
+  if ( _col < 0 || _acol < 0 ) { std::cout << "This parton has not assigned colours! \n"; exit(0); }
+  if ( p.col() < 0 || p.acol() < 0 ) { std::cout << "Recoil parton has not assigned colours! \n"; exit(0); }
+  if ( p.col() == _acol || p.acol() == _col ) return 1;
+  else return 0;
 }
 
 void Parton::set_id(int id)
@@ -64,19 +88,11 @@ int Parton::stat()
   return _stat;
 }
 
-void Parton::set_p(const FourVector& p)
+FourVector Parton::p()
 {
-  _p=p;
-}
-
-const FourVector Parton::p()
-{
-  return _p;
-}
-
-double Parton::en()
-{
-  return _p.t();
+  fjcore::PseudoJet psj = GetPseudoJet();
+  FourVector pmu (psj.px(), psj.py(), psj.pz(), psj.e());
+  return pmu;
 }
 
 void Parton::set_x(const FourVector& x)
@@ -87,16 +103,6 @@ void Parton::set_x(const FourVector& x)
 const FourVector Parton::x()
 {
   return _x;
-}
-
-void Parton::set_mom(int mom)
-{
-  _mom=mom;
-}
-
-int Parton::mom()
-{
-  return _mom;
 }
 
 void Parton::set_d1(int d1)
@@ -129,24 +135,4 @@ double Parton::mass()
   return _mass;
 }
 
-void Parton::set_virt(double virt)
-{
-  _virt=virt;
-}
-
-double Parton::virt()
-{
-  return _virt;
-}
-
-void Parton::set_z(double z)
-{
-  _z=z;
-}
-
-double Parton::z()
-{
-  return _z;
-}
-
-#endif
+} //end namespace Adkoda
