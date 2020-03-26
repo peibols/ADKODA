@@ -34,29 +34,28 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x)
   reset_momentum (p);
   _x=x;
 
-  _d1=-1000;
-  _d2=-1000;
-  _mom1=-1000;
-  _mom2=-1000;
+  _d1=0;
+  _d2=0;
+  _mom1=0;
+  _mom2=0;
 
-  _mass=0.; //FIXME Assume all partons massless for the moment 
+  _mass=0.; //FIXME Assume all partons massless for the moment
 
-  _col=-1000;
-  _acol=-1000;
+  _col=0;
+  _acol=0;
 }
 
 void Parton::display()
 {
-
-  cout << _id << " "
-	<< _stat << " "
-	<< _mom1 << " " << _mom2 << " "
-	<< _d1 << " " << _d2 << " "
-	<< _col << " " << _acol << " "
-	<< p().x() << " "
-	<< p().y() << " "
-	<< p().z() << " "
-	<< p().t() << " "
+  cout << _id << "\t "
+	<< _stat << "\t "
+	<< _mom1 << "\t " << _mom2 << "\t "
+	<< _d1 << "\t " << _d2 << "\t "
+	<< _col << "\t " << _acol << "\t "
+	<< p().x() << "\t "
+	<< p().y() << "\t "
+	<< p().z() << "\t "
+	<< p().t() << "\t "
 	<< _mass << endl;
 }
 

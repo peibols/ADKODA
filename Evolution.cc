@@ -54,9 +54,15 @@ bool Shower::evolve() {
         if (mar2 < 4.0*pt_min*pt_min) continue;
 
 	      // Overshoot z
-        double epsilon = pt_min*pt_min / mar2;
-        if (evol_scale == 3) epsilon = std::sqrt(epsilon);
+        double epsilon = pt_min*pt_min / mar2; //This overshoots all ordering (except AO).
+        if (evol_scale == 3) epsilon = std::sqrt(pt_min*pt_min / mar2);
         double zp = 0.5 * ( 1.0 + std::sqrt( 1.0 - 4.0 * epsilon ) );
+
+        // Redefine the max scale if pt_max and mar are not equal.
+        if      (evol_scale == 0) t_max = std::min(t_max, mar2/4.);
+        else if (evol_scale == 1) t_max = std::min(t_max, mar2);
+        else if (evol_scale == 2) t_max = std::min(t_max, mar2/2./(std::sqrt(mar2)/2.0));
+        else if (evol_scale == 3) t_max = std::min(t_max, mar2*4.);
 
 	      // Generate overshooted scale
         double g = max_alpha_s / ( 2.0 * M_PI ) * kernels[iKernel]->Integral( 1.0 - zp, zp );
@@ -71,7 +77,6 @@ bool Shower::evolve() {
       	  wmar2   = mar2;
       	  wzp     = zp;
         }
-
       } // End Kernel loop
     } // End recoiler loop
   } // End parton_list loop
@@ -83,24 +88,20 @@ bool Shower::evolve() {
   double  z = kernels[wKernel]->GenerateZ( 1.0 - wzp, wzp, dis(gen));
 
   // Compute virtuality
-  double Q2 = t / z / ( 1.0 - z );
+  double Q2;
   if      (evol_scale == 0) Q2 = t / z / ( 1.0 - z );
   else if (evol_scale == 1) Q2 = t;
-  else if (evol_scale == 2) Q2 = t * std::sqrt(wmar2); //FIXME use the proper energy
+  else if (evol_scale == 2) Q2 = t * 2.0 * std::sqrt(wmar2)/2.0;
   else if (evol_scale == 3) Q2 = t * z * (1.0 - z);
 
   // Accept / Reject procedure
-  double pt2 = t;
-  if      (evol_scale == 0) pt2 = t;
-  else if (evol_scale == 1) pt2 = t * z * ( 1.0 - z );
-  else if (evol_scale == 2) pt2 = Q2 * z * ( 1.0 - z );
-  else if (evol_scale == 3) pt2 = Q2 * z * ( 1.0 - z );
+  double pt2ev    = Q2 * z * ( 1.0 - z );
   double pt2_daug = Q2 * ( z * ( 1.0 - z ) * std::pow( wmar2 + Q2 , 2.0 ) - wmar2 * Q2 ) / std::pow( wmar2 - Q2 , 2.0 );
 
-  double f = alpha_s( pt2 ) * kernels[wKernel]->Value( z );
+  double f = alpha_s( pt2ev ) * kernels[wKernel]->Value( z );
   double g = max_alpha_s * kernels[wKernel]->Estimate( z );
   // If does not succeed, have a next try
-  if ( f/g < dis(gen) || Q2 > wmar2 || pt2 < DATA.pt_min*DATA.pt_min || pt2_daug < 0.0 ) {
+  if ( f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0 ) { //veto, scale in between the min/max scale, physical pt.
     // Update evolution variable
     t_max = t;
     return 1;
@@ -109,12 +110,21 @@ bool Shower::evolve() {
   // If success, set new kinematics of system
   Update( wSplit, wSpect, wKernel, wmar2, z, Q2 ); //FIXME Why is there no additional t --> z^2*t decrision?
 
+/*
+//TEST MODULE: stop at the first branch and print (z,t)
   std::ofstream outfile_test;
-  if (!outfile_test.is_open()) outfile_test.open("test.out", std::ios_base::app);
+  if (!outfile_test.is_open()) outfile_test.open("test/test.out", std::ios_base::app);
   if (wSplit==0 || wSplit==1) {
-    outfile_test << z << " " << t << " " << wmar2 << std::endl;
+    outfile_test << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << std::endl;
     return 0;
   }
+*/
+
+//TEST MODULE: print all (z,t)
+  std::ofstream outfile_test;
+  if (!outfile_test.is_open()) outfile_test.open("test/test.out", std::ios_base::app);
+  outfile_test << z << " " << pt2ev << " " << Q2 << " " << std::sqrt(Q2/(wmar2/4.)/z/(1.-z)) << std::endl;
+
 
   return 1;
 }
@@ -149,7 +159,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   double pt2 = Q2 * ( z * ( 1.0 - z ) * std::pow( mar2 + Q2 , 2.0 ) - mar2 * Q2 ) / std::pow( mar2 - Q2 , 2.0 );
   if (pt2<0.0) { std::cout << "Error: 0 > pt = " << pt2 << std::endl; exit(0); }
 
-  double pt_angle = 2.0 * M_PI * dis(gen); //FIXME include polarization.
+  double pt_angle = 2.0 * M_PI * dis(gen); //FIXME include polarization: 10.1146/annurev.ns.36.120186.001345
 
   double Pza = ( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 );
   double pz1 = std::sqrt( Ea * Ea * z * z - pt2 );
@@ -182,7 +192,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
 
   // Add daughters to parton list
   FourVector x;
-  Parton daughter1( Parton( dau1_id, 51, pDau1, x ) ); //FIXME status: 51, shower particles?
+  Parton daughter1( Parton( dau1_id, 51, pDau1, x ) ); //Status: 51, shower particles
   Parton daughter2( Parton( dau2_id, 51, pDau2, x ) );
   daughter1.set_mom1( Split ), daughter1.set_mom2( 0 );
   daughter2.set_mom1( Split ), daughter2.set_mom2( 0 );
@@ -200,7 +210,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   recoiler.set_mom1( Spect ), recoiler.set_mom2( Spect );
   recoiler.set_stat( 52 );
   parton_list.push_back( recoiler );
-  int Rec = int(parton_list.size()) - 1; //FIXME What is this?
+  int Rec = int(parton_list.size()) - 1;
 
   // Update splitter + recoiler
   parton_list[Split].set_stat( -parton_list[Split].stat() ); //It decayed: state -> decayed
@@ -209,8 +219,8 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   parton_list[Split].set_d1( Dau1 );
   parton_list[Split].set_d2( Dau2 );
 
-  parton_list[Spect].set_d1( Rec ); //state -> recoiler
-  parton_list[Spect].set_d2( 0 );
+  parton_list[Spect].set_d1( Rec );
+  parton_list[Spect].set_d2( Rec );
 }
 
 void Shower::MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2])

@@ -6,6 +6,12 @@
 
 namespace Util {
 
+double m(const FourVector& v1, const FourVector& v2) {
+    double m2 = std::pow(v1.t() + v2.t(), 2.) - std::pow(v1.x() + v2.x(), 2.)
+       - std::pow(v1.y() + v2.y(), 2.) - std::pow(v1.z() + v2.z(), 2.);
+    return (m2 > 0.) ? std::sqrt(m2) : 0.;
+  }
+
 FourVector Boost( double b[3], FourVector p)
 {
   double betamod = std::sqrt(b[0]*b[0] + b[1]*b[1] + b[2]*b[2]);

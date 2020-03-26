@@ -11,14 +11,30 @@ std::vector<Parton> InPartons::PartonList() {
   int id1, id2;
   int cols1[2], cols2[2];
 
-  FourVector p1, p2, x;
+  // Random number generator //FIXME where to initialize and put the random generator?
+  std::random_device rd; // obtain a random number from hardware
+  std::mt19937 gen(rd()); // seed the generator
+  dis = std::uniform_real_distribution<double> { 0.0, 1.0 }; // define the range
+  dis_int = std::uniform_int_distribution<> { 1, 5 };
+
+  FourVector p0, p1, p2, x;
   std::vector<Parton> hard_list;
+
+  double ecms;
+  if (DATA.parton_gun==1) ecms = DATA.pt_max;
+  else if (DATA.parton_gun==0) ecms = 91.188;
+  p0.Set( 0., 0., 0., ecms );
+  Parton hard_parton_system( Parton(90,-11,p0,x) );
+  hard_parton_system.set_mass(ecms);
+  hard_list.push_back(hard_parton_system);
 
   if (DATA.parton_gun == 1) { // Back-to-back di-parton gun
     double px = DATA.pt_max/2.;
     double py = 0.;
     double pz = 0.;
     double en = px; // FIXME Assumed massless partons for now.
+
+    event_weight = 1.;
 
     p1.Set( en, py, pz, en );
     p2.Set( -en, -py, -pz, en );
@@ -32,16 +48,16 @@ std::vector<Parton> InPartons::PartonList() {
     else if (DATA.hard_partons == 1) { // qqbar
       cols1[0]=101, cols1[1]=0;
       cols2[0]=0, cols2[1]=101;
-      id1=1, id2=-1;
+      id1=dis_int(gen), id2=id1;
     }
-    else if (DATA.hard_partons == 2) {
+    else if (DATA.hard_partons == 2) { //nonphysical
       cols1[0]=101, cols1[1]=0;
       cols2[0]=102, cols2[1]=101;
-      id1=1, id2=21;
+      id1=dis_int(gen), id2=21;
     }
   }
   else if (DATA.parton_gun == 0) { // LO: e-e+ --> jj
-    double ecms = DATA.pt_max;
+    double ecms = 91.188;
     double ct = 2.*dis(gen)-1.;
     double st = std::sqrt(1.-ct*ct);
     double phi = 2.*M_PI*dis(gen);
@@ -51,17 +67,26 @@ std::vector<Parton> InPartons::PartonList() {
     FourVector pb ( 0., 0., -ecms/2., ecms/2. );
     cols1[0]=101, cols1[1]=0;
     cols2[0]=0,   cols2[1]=101;
-    id1=1, id2=-1; //FIXME random flavor
+    id1=dis_int(gen), id2=-id1;
     double s = (pa+pb)*(pa+pb);
     double t = (pa-p1)*(pa-p1);
     double lome = ME2(id1, s, t);
-    double dxs = 5.*lome*3.89379656e8/(8.*M_PI)/(2.*std::pow(ecms, 2.)); //FIXME where to put the event weight?
+    double dxs = 5.*lome*3.89379656e8/(8.*M_PI)/(2.*std::pow(ecms, 2.));
+    event_weight = dxs;
 
-    Parton hard_parton_a( Parton(-11,-12,pa,x) ); //FIXME assign beam particles and daughters in the right way.
+    Parton hard_parton_a( Parton(-11,-12,pa,x) ); //id:11 (e), stat:12 incoming beam
     Parton hard_parton_b( Parton(11,-12,pb,x) );
-
+    hard_parton_a.set_d1(3); //FIXME I set it by hand.
+    hard_parton_b.set_d1(3);
     hard_list.push_back(hard_parton_a);
     hard_list.push_back(hard_parton_b);
+    Parton hard_parton_c( Parton(23,-22,pa+pb,x) ); //id:22 (Z0), stat:22 intermediate
+    hard_parton_c.set_mass(91.188);
+    hard_parton_c.set_mom1(1); //FIXME set it automatically
+    hard_parton_c.set_mom2(2);
+    hard_parton_c.set_d1(4);
+    hard_parton_c.set_d2(5);
+    hard_list.push_back(hard_parton_c);
   }
 
   int stat1 = 23; // Primary, final state
@@ -69,14 +94,13 @@ std::vector<Parton> InPartons::PartonList() {
 
   Parton hard_parton1( Parton(id1,stat1,p1,x) );
   Parton hard_parton2( Parton(id2,stat2,p2,x) );
-  hard_parton1.set_mom1(-3), hard_parton1.set_mom2(-4); // Mothers -3,-4 = primary
-  hard_parton2.set_mom1(-3), hard_parton2.set_mom2(-4);
+  hard_parton1.set_mom1(hard_list.size()-1);
+  hard_parton2.set_mom1(hard_list.size()-1);
   hard_parton1.set_cols(cols1);
   hard_parton2.set_cols(cols2);
 
   hard_list.push_back(hard_parton1);
   hard_list.push_back(hard_parton2);
-
 
   return hard_list;
 }

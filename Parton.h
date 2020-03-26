@@ -19,9 +19,9 @@ using std::ostream;
 class Parton : protected fjcore::PseudoJet
 {
   friend class fjcore::PseudoJet;
-    
+
   public:
-  
+
     inline void reset_momentum( const double px, const double py, const double pz, const double e ){
       fjcore::PseudoJet::reset_momentum ( px, py, pz, e );
     }
@@ -33,7 +33,7 @@ class Parton : protected fjcore::PseudoJet
     fjcore::PseudoJet GetPseudoJet() const{
       return PseudoJet ( *this );
     }
-    
+
     using fjcore::PseudoJet::px;
     using fjcore::PseudoJet::py;
     using fjcore::PseudoJet::pz;
@@ -85,19 +85,19 @@ class Parton : protected fjcore::PseudoJet
 
   public:
 
-    Parton() : PseudoJet() {}; 
+    Parton() : PseudoJet() {};
     Parton (int id, int stat, const FourVector& p, const FourVector& x);
     //Parton (const Parton& srp);
-	  
+
     ~Parton();
 
     void set_cols( int cols[2] ) { _col = cols[0], _acol = cols[1]; }
-    int col() { return _col; } 
-    int acol() { return _acol; } 
+    int col() { return _col; }
+    int acol() { return _acol; }
 
     void set_id( int id );
     int id();
-    
+
     void set_stat(int stat);
     int stat();
 

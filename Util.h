@@ -41,6 +41,7 @@
 
 namespace Util {
 
+  double m(const FourVector& v1, const FourVector& v2);
   FourVector Boost( double v[3], FourVector p);
   FourVector BoostBack( double v[3], FourVector p);
 

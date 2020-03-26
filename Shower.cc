@@ -9,31 +9,22 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
   // Introduce kernels
   Pgg* pgg = new Pgg (21, 21, 21);
   kernels.push_back(pgg);
-  //Pqg* pqg = new Pqg (1, 1, 21);
-  //kernels.push_back(pqg);
-  //Pqq* pqq = new Pqq (21, 1, -1);
-  //kernels.push_back(pqq);
-  //FIXME by including more flavors, will q/g ratio change?
-/*   for (int fl = 1; fl <= 6; fl++) {
-    Pqg* pqg = new Pqg (fl, fl, 21);
+  Pqg* pqg;
+  Pqq* pqq;
+   for (int fl = 1; fl <= 5; fl++) {
+    pqg = new Pqg (fl, fl, 21);
     kernels.push_back(pqg);
-    Pqg* pqg = new Pqg (-fl, -fl, 21);
+    pqg = new Pqg (-fl, -fl, 21);
     kernels.push_back(pqg);
-    Pqq* pqq = new Pqq (21, fl, -fl);
+    pqq = new Pqq (21, fl, -fl);
     kernels.push_back(pqq);
   }
-*/
 
   // Alpha_s and scale cutoff
   pt_min = DATA.pt_min;
   std::cout << " pt_min= " << pt_min << std::endl;
   max_alpha_s = alpha_s( pt_min * pt_min );
   std::cout << " max_alpha_s= " << max_alpha_s << std::endl;
-
-  // Random number generator
-  dis = std::uniform_real_distribution<double> { 0.0, 1.0 };
-  std::random_device rd;
-  std::mt19937 gen(rd());
 
   std::cout << "Shower CONSTRUCTED" << std::endl;
 
@@ -42,25 +33,25 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
 void Shower::init ( InPartons inpartons) {
 
   parton_list = inpartons.PartonList();
+  event_weight = inpartons.event_weight;
 
   // Fix minimum and maximum scale
   if      (DATA.evol_scale==0) {              // pt ordering
-    t_min = std::pow(DATA.pt_min, 2.0);
-    t_max = std::pow(DATA.pt_max, 2.0)/4.0;
+    t_min = std::pow(DATA.pt_min, 2.);
+    t_max = std::pow(DATA.pt_max, 2.);
   }
   else if (DATA.evol_scale==1) {              // m ordering
-    t_min = std::pow(DATA.pt_min, 2.0) * 4.0;
-    t_max = std::pow(DATA.pt_max, 2.0);
+    t_min = std::pow(DATA.pt_min, 2.) * 4.;
+    t_max = std::pow(DATA.pt_max, 2.) * 4.;
   }
   else if (DATA.evol_scale==2) {              // tf ordering
-    t_min = 2.0 * DATA.pt_min*DATA.pt_min / (DATA.pt_max/2.0);
-    t_max = DATA.pt_max;
+    t_min = std::pow(DATA.pt_min, 2.) * 2. / (DATA.pt_max/2.);
+    t_max = std::pow(DATA.pt_max, 2.) * 2. / (DATA.pt_max/2.);
   }
   else if (DATA.evol_scale==3) {              // qt ordering
-    t_min = DATA.pt_min * DATA.pt_min * 16.0;
-    t_max = std::pow(DATA.pt_max, 2.0);
+    t_min = std::pow(DATA.pt_min, 2.) * 16.;
+    t_max = std::pow(DATA.pt_max, 2.) * 16.;
   }
-
 
   // Update max_color index
   max_colour = 101;
@@ -117,7 +108,10 @@ double Shower::alpha_s( double t ) { // FIXME use a particle list for the mass, 
 */
 
 double Shower::alpha_s( double t ) {
-  double alpha = 12.0 * M_PI / ( 33.0 - 2.0 * Nf ) / std::log( t / ( Lambda * Lambda ) );
+  double Nf = 5.;
+  double alpha;
+  if (t > 0.95) alpha = 12.0 * M_PI / ( 33.0 - 2.0 * Nf ) / std::log( t / ( Lambda * Lambda ) );
+  else          alpha = 12.0 * M_PI / ( 33.0 - 2.0 * Nf ) / std::log( 0.95 / ( Lambda * Lambda ) );
   return alpha;
 }
 
@@ -125,8 +119,10 @@ double Shower::alpha_s( double t ) {
 
 void Shower::print() {
 
+  std::cout << "Event weight: " << event_weight << std::endl;
+  std::cout << "ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t m" << std::endl;
   for (int ip=0; ip<parton_list.size(); ip++) {
-    std::cout << ip << " ";
+    std::cout << ip << "\t ";
     parton_list[ip].display();
   }
 

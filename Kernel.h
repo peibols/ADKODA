@@ -57,11 +57,10 @@ class Pqq : public Kernel {
 
     using Kernel::Kernel;
 
-    // FIXME Nf should depend on the scale.
     // FIXME should be solved analytically.
-    double Value ( double z ) {return Nf * 0.5 * ( z * z + ( 1.0 - z ) * ( 1.0 - z ) ); }
-    double Estimate ( double z ) {return Nf * 0.5;}
-    double Integral ( double zm, double zp ) {return Nf * 0.5 * ( zp - zm );}
+    double Value ( double z ) {return 0.5 * ( z * z + ( 1.0 - z ) * ( 1.0 - z ) ); } //This is not proportional with Nf, because it is summed up later for all flavors.
+    double Estimate ( double z ) {return 0.5;}
+    double Integral ( double zm, double zp ) {return 0.5 * ( zp - zm );}
     double GenerateZ ( double zm, double zp , double R) {return zm + R * ( zp - zm ); }
 
 };

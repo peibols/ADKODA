@@ -15,6 +15,7 @@ class BerGEN {
     InPartons *inpartons = 	nullptr;
     InitData  DATA;
 
+    double event_weight;
     std::vector<Parton> parton_list;
 
   public:
