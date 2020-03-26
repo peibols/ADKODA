@@ -58,11 +58,11 @@ bool Shower::evolve() {
         if (evol_scale == 3) epsilon = std::sqrt(epsilon);
         double zp = 0.5 * ( 1.0 + std::sqrt( 1.0 - 4.0 * epsilon ) );
 
-	      // Generate overshooted scale
+	      // Generate overshot scale
         double g = max_alpha_s / ( 2.0 * M_PI ) * kernels[iKernel]->Integral( 1.0 - zp, zp );
         double tt = t_max * std::pow( dis(gen), 1.0 / g );
 
-	      // Store if highest scale from all particles all recoilers and all possible splittings.
+	      // Store if highest scale from all particles, all recoilers and all possible splittings.
         if ( tt > t ) {
           t       = tt;
       	  wSplit  = iSplit;
@@ -133,7 +133,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   // Perform rotation of emitter along z, store angle and axis
   double angle = -1000.;
   double k[3]  = {0.};
-  AlignWithZ( BpSplit, angle, k ); // Find proper andle and k to rotate around.
+  AlignWithZ( BpSplit, angle, k ); // Find proper angle and k to rotate around.
 
   // Update kinematics of spectator
   FourVector UpSpect ( 0.0 ,

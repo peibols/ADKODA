@@ -77,7 +77,6 @@ std::vector<Parton> InPartons::PartonList() {
   hard_list.push_back(hard_parton1);
   hard_list.push_back(hard_parton2);
 
-
   return hard_list;
 }
 

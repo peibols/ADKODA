@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
     bergen.next();
 
   }
+
   std::cout << "End Program" << std::endl;
 
   return 0;

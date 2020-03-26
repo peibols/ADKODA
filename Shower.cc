@@ -61,7 +61,6 @@ void Shower::init ( InPartons inpartons) {
     t_max = std::pow(DATA.pt_max, 2.0);
   }
 
-
   // Update max_color index
   max_colour = 101;
   for (unsigned int ip=0; ip < parton_list.size(); ip++) {

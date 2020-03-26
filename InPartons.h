@@ -16,13 +16,13 @@ class InPartons {
     InPartons(const InitData &DATA_in) : DATA(DATA_in) {}
     ~InPartons() {}
 
-   std::vector<Parton> PartonList();
-   double ME2(int id, double s, double t);
+    std::vector<Parton> PartonList();
+    double ME2(int id, double s, double t);
 
- protected:
+  protected:
 
-   std::uniform_real_distribution<double> dis;
-   std::mt19937 gen;
+    std::uniform_real_distribution<double> dis;
+    std::mt19937 gen;
 
   private:
 
