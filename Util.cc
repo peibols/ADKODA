@@ -12,8 +12,33 @@ double m(const FourVector& v1, const FourVector& v2) {
     return (m2 > 0.) ? std::sqrt(m2) : 0.;
   }
 
-FourVector Boost( double b[3], FourVector p)
-{
+double m2(const FourVector& v1, const FourVector& v2) { return std::pow(m(v1, v2), 2.); }
+
+FourVector Cross(const FourVector& v1, const FourVector& v2) {
+  return FourVector(v1.y()*v2.z()-v1.z()*v2.y(),
+                    v1.z()*v2.x()-v1.x()*v2.z(),
+                    v1.x()*v2.y()-v1.y()*v2.x(), 0.);
+}
+
+FourVector BoostForCS(FourVector p, FourVector q) {
+  double rsq = p.m();
+  double v0 = (p.t()*q.t()-p.x()*q.x()-p.y()*q.y()-p.z()*q.z())/rsq;
+  double c1 = (q.t()+v0)/(p.t()+rsq);
+  return FourVector(q.x() - p.x()*c1,
+                    q.y() - p.y()*c1,
+                    q.z() - p.z()*c1, v0);
+}
+FourVector BoostBackForCS(FourVector p, FourVector q) {
+  double rsq = p.m();
+  double v0 = (p.t()*q.t()+p.x()*q.x()+p.y()*q.y()+p.z()*q.z())/rsq;
+  double c1 = (q.t()+v0)/(p.t()+rsq);
+  return FourVector(q.x() + p.x()*c1,
+                    q.y() + p.y()*c1,
+                    q.z() + p.z()*c1, v0);
+}
+
+FourVector Boost( double b[3], FourVector p) {
+
   double betamod = std::sqrt(b[0]*b[0] + b[1]*b[1] + b[2]*b[2]);
   double gamma = 1.0 / std::sqrt(1.0-betamod*betamod);
   double pscalb = p.x()*b[0] + p.y()*b[1] + p.z()*b[2];
@@ -27,8 +52,8 @@ FourVector Boost( double b[3], FourVector p)
   return FourVector(ptx, pty, ptz, ptt);
 }
 
-FourVector BoostBack( double b[3], FourVector p) //FIXME can be simplified BoostBack(v, p) == Boost(-v, p)
-{
+FourVector BoostBack( double b[3], FourVector p) { //FIXME can be simplified BoostBack(v, p) == Boost(-v, p)
+
   double betamod = std::sqrt(b[0]*b[0] + b[1]*b[1] + b[2]*b[2]);
   double gamma = 1.0 / std::sqrt(1.0-betamod*betamod);
   double pscalb = p.x()*b[0] + p.y()*b[1] + p.z()*b[2];
@@ -42,12 +67,10 @@ FourVector BoostBack( double b[3], FourVector p) //FIXME can be simplified Boost
   return FourVector(bx, by, bz, bt);
 }
 
-void VelCOM(FourVector p1, FourVector p2, double b[3])
-{
+void VelCOM(FourVector p1, FourVector p2, double b[3]){
   b[0] = ( p1.x() + p2.x() ) / ( p1.t() + p2.t() );
   b[1] = ( p1.y() + p2.y() ) / ( p1.t() + p2.t() );
   b[2] = ( p1.z() + p2.z() ) / ( p1.t() + p2.t() );
-
   return;
 }
 
@@ -77,16 +100,10 @@ void AlignWithZ(FourVector &vec, double &angle, double k[3]) {
   Rotation(vec, angle, k);
 }
 
-int IsFile(std::string file_name)
-{
- FILE *temp;
-
- if( (temp = fopen(file_name.c_str(),"r")) == NULL) return 0;
- else
-  {
-   fclose(temp);
-   return 1;
-  }
+int IsFile(std::string file_name) {
+  FILE *temp;
+  if( (temp = fopen(file_name.c_str(), "r")) == NULL ) return 0;
+  else { fclose(temp); return 1; }
 }/* IsFile */
 
 // support comments in the parameters file

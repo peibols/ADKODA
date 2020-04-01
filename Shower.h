@@ -26,14 +26,16 @@ class Shower {
 
     void print();
 
+    double beta0( int nf );
+    double beta1( int nf );
+    double alpha_s0( double t );
     double alpha_s( double t );
 
-    void Update( int Split, int Spect, int Kernel, double mar2, double z, double Q2 );
+    void Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 );
 
     void MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]);
 
     double get_event_weight() { return event_weight; }
-
     std::vector<Parton> get_parton_list() { return parton_list; }
 
   protected:

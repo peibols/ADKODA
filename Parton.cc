@@ -61,9 +61,9 @@ void Parton::display()
 
 bool Parton::ColourConnected(Parton& p)
 {
-  if ( _col < 0 || _acol < 0 ) { std::cout << "This parton has not assigned colours! \n"; exit(0); }
-  if ( p.col() < 0 || p.acol() < 0 ) { std::cout << "Recoil parton has not assigned colours! \n"; exit(0); }
-  if ( p.col() == _acol || p.acol() == _col ) return 1;
+  if ( (_col < 0 || _acol < 0) || (_col == 0 && _acol == 0) ) { std::cout << "This parton has not assigned colours! \n"; exit(0); }
+  if ( (p.col() < 0 || p.acol() < 0) || (p.col() == 0 && p.acol() == 0) ) { std::cout << "Recoil parton has not assigned colours! \n"; exit(0); }
+  if ( (p.col() == _acol && _acol != 0) || (p.acol() == _col && _col != 0) ) return 1;
   else return 0;
 }
 

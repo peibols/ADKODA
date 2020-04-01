@@ -9,10 +9,10 @@ class Kernel {
 
   public:
 
-    Kernel (int f1, int f2, int f3) { flavs[0] = f1, flavs[1] = f2, flavs[2] = f3 ;}
+    Kernel (int f1, int f2, int f3) { flavs[0] = f1, flavs[1] = f2, flavs[2] = f3 ;} // 1 --> 2 + 3
     virtual ~Kernel () {};
 
-    virtual double Value ( double z ) = 0;
+    virtual double Value ( double z, double y ) = 0;
     virtual double Estimate ( double z ) = 0;
     virtual double Integral ( double zm, double zp ) = 0;
     virtual double GenerateZ ( double zm, double zp , double R) = 0;
@@ -25,45 +25,62 @@ class Kernel {
 
 };
 
-class Pgg : public Kernel {
-
-  using Kernel::Kernel;
-
+//Alterelli-Parisi Splitting Functions
+class Pgg : public Kernel { //g --> g + g
   public:
-
-    double Value ( double z ) {return CA * ( z / (1.0 - z) + (1.0 - z) / z + z * (1.0 - z) );}
+    using Kernel::Kernel;
+    double Value ( double z, double y ) {return CA * ( z / (1.0 - z) + (1.0 - z) / z + z * (1.0 - z) );}
     double Estimate ( double z ) {return CA * ( 1.0 / z + 1.0 / (1.0 - z) );}
     double Integral ( double zm, double zp ) {return CA * std::log( (zp * (1.0 - zm)) / (zm * (1.0 - zp)) );}
     double GenerateZ ( double zm, double zp , double R) { return 1.0 / ( 1.0 + (1.0 - zm)/zm * std::pow((zp * (1.0 - zm)) / (zm * (1.0 - zp)), -R) );}
-
 };
 
-class Pqg : public Kernel {
-
+class Pqq : public Kernel { //q --> q + g
   public:
-
     using Kernel::Kernel;
-
-    double Value ( double z ) {return CF * (1.0 + z * z) / (1.0 - z);}
+    double Value ( double z, double y ) {return CF * (1.0 + z * z) / (1.0 - z);}
     double Estimate ( double z ) {return CF * 2.0 / (1.0 - z);}
     double Integral ( double zm, double zp ) {return CF * 2.0 * std::log( (1.0 - zm) / (1.0 - zp) );}
     double GenerateZ ( double zm, double zp , double R) {return 1.0 + (zm - 1.0) * std::pow( (1.0 - zp) / (1.0 - zm), R );}
-
 };
 
-class Pqq : public Kernel {
-
+class Pgq : public Kernel { //g --> q + qbar
   public:
-
     using Kernel::Kernel;
-
-    // FIXME should be solved analytically.
-    double Value ( double z ) {return 0.5 * ( z * z + ( 1.0 - z ) * ( 1.0 - z ) ); } //This is not proportional with Nf, because it is summed up later for all flavors.
-    double Estimate ( double z ) {return 0.5;}
-    double Integral ( double zm, double zp ) {return 0.5 * ( zp - zm );}
+    double Value ( double z, double y ) {return TR * ( z * z + ( 1.0 - z ) * ( 1.0 - z ) ); } //FIXME there is a 1/2 difference in AP and CS.
+    double Estimate ( double z ) {return TR;}
+    double Integral ( double zm, double zp ) {return TR * ( zp - zm );}
     double GenerateZ ( double zm, double zp , double R) {return zm + R * ( zp - zm ); }
-
 };
+
+//Catani-Seymour Splitting Functions
+class Pgg_CS : public Kernel {//g --> g + g
+  public:
+    using Kernel::Kernel;
+    double Value (double z, double y) {return CA / 2. * ( 2./(1.-z*(1.-y)) - 2. + z*(1.-z) );}
+    double Estimate (double z) {return CA / (1.-z);}
+    double Integral (double zm, double zp) {return CA * std::log((1.-zm)/(1.-zp));}
+    double GenerateZ (double zm, double zp, double R) {return 1. + (zp-1.) * std::pow((1.-zm)/(1.-zp), R);}
+};
+
+class Pgq_CS : public Kernel {//g --> q + qbar
+  public:
+    using Kernel::Kernel;
+    double Value (double z, double y) {return TR/2. * (1. - 2.*z*(1.-z));}
+    double Estimate (double z) {return TR/2.;}
+    double Integral (double zm, double zp) {return TR/2. * (zp-zm);}
+    double GenerateZ (double zm, double zp, double R) {return zm + (zp-zm) * R;}
+};
+
+class Pqq_CS : public Kernel {//q --> q + g
+  using Kernel::Kernel;
+  public:
+    double Value (double z, double y) {return CF * ( 2./(1.-z*(1.-y)) - (1.+z) );}
+    double Estimate (double z) {return CF * 2./(1.-z);}
+    double Integral (double zm, double zp) {return CF * 2. * std::log((1.-zm)/(1.-zp));}
+    double GenerateZ (double zm, double zp, double R) {return 1. + (zp-1.) * std::pow((1.-zm)/(1.-zp), R);}
+};
+
 
 } // end namespace Adkoda
 

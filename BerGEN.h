@@ -15,6 +15,8 @@ class BerGEN {
     InPartons *inpartons = 	nullptr;
     InitData  DATA;
 
+  protected:
+
     double event_weight;
     std::vector<Parton> parton_list;
 
@@ -34,6 +36,10 @@ class BerGEN {
 
     // Get #Events
     int number_events() { return DATA.number_events; }
+
+    void print();
+    double get_event_weight() { return event_weight; }
+    std::vector<Parton> get_parton_list() { return parton_list; }
 
 };
 

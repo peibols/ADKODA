@@ -10,66 +10,30 @@ namespace Adkoda {
 
 bool Shower::evolve() {
 
-  // Define winner parameters
   double wmar2, wzp;
   int wSplit, wSpect, wKernel;
 
-  // Get evolution scale
-  int evol_scale = DATA.evol_scale;
-
-  // Initialize scale value to its minimal
   double t = t_min;
-
   for (unsigned int iSplit=0; iSplit<parton_list.size(); iSplit++) { // Praticle list scan
-
     Parton p_split = parton_list[iSplit];
-
-    // Skip if inactive parton
-    if (p_split.stat()<0) continue;
-
-    // Find recoiler partner
+    if (p_split.stat()<0) continue; // Skip if inactive parton
     for (unsigned int iSpect=0; iSpect<parton_list.size(); iSpect++) { // Find dipole
-
-      if ( iSplit == iSpect ) continue;
-
+      if (iSplit == iSpect) continue;
       Parton p_spect = parton_list[iSpect];
-      // Skip if inactive parton
-      if ( p_spect.stat()<0) continue;
-
-      // Check if colour connected
-      if ( !p_split.ColourConnected(p_spect) ) continue;
-
-      // Loop over possible kernels
-      for (int iKernel=0; iKernel<kernels.size(); iKernel++) {
-
-	      // Check if kernel applies
-        if (kernels[iKernel]->flav(0) != p_split.id()) continue;
-
-	      // Check if dipole has enough phase-space
-        FourVector pa   = p_split.p();
-        FourVector pr   = p_spect.p();
-        FourVector p_ar = pa;
-	      p_ar += pr;
-        double mar2 = p_ar*p_ar;
-        if (mar2 < 4.0*pt_min*pt_min) continue;
-
+      if (p_spect.stat()<0) continue; // Skip if inactive
+      if (!p_split.ColourConnected(p_spect)) continue; // Skip if not colour connected
+      for (int iKernel=0; iKernel<kernels.size(); iKernel++) { // Loop over possible kernels
+        if (kernels[iKernel]->flav(0) != p_split.id()) continue; // Skip if kernel not applies
+        double mar2 = m2(p_split.p(), p_spect.p());
+        if (mar2 < 4.*pt_min*pt_min) continue; // Skip if dipole has no enough phase-space
 	      // Overshoot z
         double epsilon = pt_min*pt_min / mar2; //This overshoots all ordering (except AO).
-        if (evol_scale == 3) epsilon = std::sqrt(pt_min*pt_min / mar2);
-        double zp = 0.5 * ( 1.0 + std::sqrt( 1.0 - 4.0 * epsilon ) );
-
-        // Redefine the max scale if pt_max and mar are not equal.
-        if      (evol_scale == 0) t_max = std::min(t_max, mar2/4.);
-        else if (evol_scale == 1) t_max = std::min(t_max, mar2);
-        else if (evol_scale == 2) t_max = std::min(t_max, mar2/2./(std::sqrt(mar2)/2.0));
-        else if (evol_scale == 3) t_max = std::min(t_max, mar2*4.);
-
+        if (DATA.evol_scale == 3) epsilon = std::sqrt(pt_min*pt_min / mar2);
+        double zp = 0.5 * (1. + std::sqrt(1. - 4.*epsilon));
 	      // Generate overshooted scale
-        double g = max_alpha_s / ( 2.0 * M_PI ) * kernels[iKernel]->Integral( 1.0 - zp, zp );
-        double tt = t_max * std::pow( dis(gen), 1.0 / g );
-
-	      // Store if highest scale from all particles all recoilers and all possible splittings.
-        if ( tt > t ) {
+        double g = max_alpha_s / (2.*M_PI) * kernels[iKernel]->Integral(1.-zp, zp);
+        double tt = t_max * std::pow(dis(gen), 1./g);
+        if ( tt > t ) { // Store if highest scale from all particles all recoilers and all possible splittings.
           t       = tt;
       	  wSplit  = iSplit;
       	  wSpect  = iSpect;
@@ -80,119 +44,136 @@ bool Shower::evolve() {
       } // End Kernel loop
     } // End recoiler loop
   } // End parton_list loop
-
+  t_max = t;
   // Terminate shower if no winner found
   if (t <= t_min) return 0;
-
-  // Find z value
-  double  z = kernels[wKernel]->GenerateZ( 1.0 - wzp, wzp, dis(gen));
-
+  // Generate final z value
+  double z = kernels[wKernel]->GenerateZ(1.-wzp, wzp, dis(gen));
   // Compute virtuality
-  double Q2;
-  if      (evol_scale == 0) Q2 = t / z / ( 1.0 - z );
-  else if (evol_scale == 1) Q2 = t;
-  else if (evol_scale == 2) Q2 = t * 2.0 * std::sqrt(wmar2)/2.0;
-  else if (evol_scale == 3) Q2 = t * z * (1.0 - z);
+  double Q2 = 0.;
+  if      (DATA.evol_scale == 0) Q2 = t / z / ( 1.0 - z );
+  else if (DATA.evol_scale == 1) Q2 = t;
+  else if (DATA.evol_scale == 2) Q2 = t * 2.0 * std::sqrt(wmar2)/2.0;
+  else if (DATA.evol_scale == 3) Q2 = t * z * (1.0 - z);
+  else std::cout << "ERROR: evol_scale = 0-3" << std::endl;
 
-  // Accept / Reject procedure
-  double pt2ev    = Q2 * z * ( 1.0 - z );
-  double pt2_daug = Q2 * ( z * ( 1.0 - z ) * std::pow( wmar2 + Q2 , 2.0 ) - wmar2 * Q2 ) / std::pow( wmar2 - Q2 , 2.0 );
+  double pt2ev    = Q2 * z * (1.-z);
+  double pt2_daug = Q2 * ( z * (1.-z) * std::pow(wmar2 + Q2, 2.) - wmar2 * Q2 ) / std::pow( wmar2 - Q2, 2.);
+  double y = 0.;
+  if (DATA.shower_kernel==1) y = t/wmar2/z/(1.-z);
+  if (y < 1.) {
+    // Accept / Reject veto procedure
+    double f = (1.-y) * alpha_s(pt2ev) * kernels[wKernel]->Value(z, y);
+    double g = max_alpha_s * kernels[wKernel]->Estimate(z);
+    if (DATA.shower_kernel==0) { // If does not succeed, have a next try
+      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0 ) {return 1;}  //veto, scale in between the min/max scale, physical pt.
+    } else if (DATA.shower_kernel==1) {
+      if (f/g < dis(gen) || y > 1.) {return 1;}
+    } else std::cout << "ERROR: shower_kernel = 0,1" << std::endl;
 
-  double f = alpha_s( pt2ev ) * kernels[wKernel]->Value( z );
-  double g = max_alpha_s * kernels[wKernel]->Estimate( z );
-  // If does not succeed, have a next try
-  if ( f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0 ) { //veto, scale in between the min/max scale, physical pt.
-    // Update evolution variable
-    t_max = t;
-    return 1;
-  }
-
-  // If success, set new kinematics of system
-  Update( wSplit, wSpect, wKernel, wmar2, z, Q2 ); //FIXME Why is there no additional t --> z^2*t decrision?
+    // If success, set new kinematics of system
+    Update( wSplit, wSpect, wKernel, wmar2, z, y, Q2 );//FIXME Why is there no additional t --> z^2*t decrision?
 
 /*
-//TEST MODULE: stop at the first branch and print (z,t)
-  std::ofstream outfile_test;
-  if (!outfile_test.is_open()) outfile_test.open("test/test.out", std::ios_base::app);
-  if (wSplit==0 || wSplit==1) {
-    outfile_test << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << std::endl;
-    return 0;
-  }
+    //TEST MODULE: print all (z,t)
+    std::ofstream outfile_test;
+    if (!outfile_test.is_open()) outfile_test.open("test/test_veto.out", std::ios_base::app);
+    outfile_test  << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << " " << y << std::endl;
 */
+/*
+    //TEST MODULE: stop at the first branch and print veto variables and kinematics
+    std::ofstream outfile_test_veto;
+    if (!outfile_test_veto.is_open()) outfile_test_veto.open("test/test_veto.out", std::ios_base::app);
+    std::ofstream outfile_kinem;
+    if (!outfile_kinem.is_open()) outfile_kinem.open("test/test_kinematics.out", std::ios_base::app);
+    if (wSplit==5 || wSplit==4) {
+    //if (parton_list[wSplit].mom1()==5 || parton_list[wSplit].mom2()==4) {
+      outfile_test_veto << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << " " << y << std::endl;
 
-//TEST MODULE: print all (z,t)
-  std::ofstream outfile_test;
-  if (!outfile_test.is_open()) outfile_test.open("test/test.out", std::ios_base::app);
-  outfile_test << z << " " << pt2ev << " " << Q2 << " " << std::sqrt(Q2/(wmar2/4.)/z/(1.-z)) << std::endl;
-
-
+      outfile_kinem << parton_list[parton_list[wSplit].d2()].e()  << " " << parton_list[parton_list[wSplit].d2()].px() << " " <<
+                       parton_list[parton_list[wSplit].d2()].py() << " " << parton_list[parton_list[wSplit].d2()].pz() << " " << std::endl;
+      return 0;
+    }
+*/
+    return 1;
+  }
   return 1;
 }
 
-void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, double Q2 ) {
+void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 ) {
 
-  // COM frame
-  double beta[3] = {0.};
   FourVector pSplit = parton_list[ Split ].p();
   FourVector pSpect = parton_list[ Spect ].p();
-  VelCOM(pSplit, pSpect, beta); // Find boost vector to COM.
+  FourVector UpSpect, pDau1, pDau2;
+  double pt_angle = 2. * M_PI * dis(gen); //FIXME include polarization: 10.1146/annurev.ns.36.120186.001345
+  if (DATA.shower_kernel==0) {
+    // COM frame
+    double beta[3] = {0.};
+    VelCOM(pSplit, pSpect, beta); // Find boost vector to COM.
 
-  // Boost to COM frame
-  FourVector BpSplit = Boost( beta, pSplit );
+    // Boost to COM frame
+    FourVector BpSplit = Boost( beta, pSplit );
 
-  // Perform rotation of emitter along z, store angle and axis
-  double angle = -1000.;
-  double k[3]  = {0.};
-  AlignWithZ( BpSplit, angle, k ); // Find proper andle and k to rotate around.
+    // Perform rotation of emitter along z, store angle and axis
+    double angle = -1000.;
+    double k[3]  = {0.};
+    AlignWithZ( BpSplit, angle, k ); // Find proper andle and k to rotate around.
 
-  // Update kinematics of spectator
-  FourVector UpSpect ( 0.0 ,
-      0.0 ,
-			-( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 ),
-			( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 ) );
+    // Update kinematics of spectator
+    UpSpect.Set( 0.0 , 0.0 ,
+  			         -( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 ),
+  			         ( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 ) );
 
-  // Kinematics of daughters
-  double Ea = ( mar2 + Q2 ) / 2.0 / std::sqrt( mar2 );
-  double E1 = z * Ea;
-  double E2 = ( 1.0 - z ) * Ea;
+    // Kinematics of daughters
+    double Ea = ( mar2 + Q2 ) / 2.0 / std::sqrt( mar2 );
+    double E1 = z * Ea;
+    double E2 = ( 1.0 - z ) * Ea;
 
-  double pt2 = Q2 * ( z * ( 1.0 - z ) * std::pow( mar2 + Q2 , 2.0 ) - mar2 * Q2 ) / std::pow( mar2 - Q2 , 2.0 );
-  if (pt2<0.0) { std::cout << "Error: 0 > pt = " << pt2 << std::endl; exit(0); }
+    double pt2 = Q2 * ( z * ( 1.0 - z ) * std::pow( mar2 + Q2 , 2.0 ) - mar2 * Q2 ) / std::pow( mar2 - Q2 , 2.0 );
+    if (pt2<0.) { std::cout << "Error: 0 > pt = " << pt2 << std::endl; exit(0); }
 
-  double pt_angle = 2.0 * M_PI * dis(gen); //FIXME include polarization: 10.1146/annurev.ns.36.120186.001345
+    double Pza = ( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 );
+    double pz1 = std::sqrt( Ea * Ea * z * z - pt2 );
+    double pz2 = Pza - pz1;
 
-  double Pza = ( mar2 - Q2 ) / 2.0 / std::sqrt( mar2 );
-  double pz1 = std::sqrt( Ea * Ea * z * z - pt2 );
-  double pz2 = Pza - pz1;
+    pDau1.Set( std::sqrt( pt2 ) * std::cos( pt_angle ),
+  			       std::sqrt( pt2 ) * std::sin( pt_angle ),
+  			       pz1,
+  			       E1 );
+    pDau2.Set( -pDau1.x(), -pDau1.y(), pz2, E2 );
 
-  FourVector pDau1 ( std::sqrt( pt2 ) * std::cos( pt_angle ),
-			std::sqrt( pt2 ) * std::sin( pt_angle ),
-			pz1,
-			E1 );
-  FourVector pDau2 ( -pDau1.x(),
-			-pDau1.y(),
-			pz2,
-			E2 );
+    // Rotate & Boost back to original frame
+    Rotation( UpSpect, -angle, k );
+    Rotation( pDau1,  -angle, k );
+    Rotation( pDau2,  -angle, k );
 
-  // Rotate & Boost back to original frame
-  Rotation( UpSpect, -angle, k );
-  Rotation( pDau1,  -angle, k );
-  Rotation( pDau2,  -angle, k );
-
-  UpSpect = BoostBack( beta, UpSpect);
-  pDau1   = BoostBack( beta, pDau1);
-  pDau2   = BoostBack( beta, pDau2);
+    UpSpect = BoostBack( beta, UpSpect);
+    pDau1   = BoostBack( beta, pDau1);
+    pDau2   = BoostBack( beta, pDau2);
+  }
+  else if(DATA.shower_kernel==1) {
+    double rkt = std::sqrt(mar2*y*z*(1.-z));
+    FourVector kt1 = Cross(pSplit, pSpect);
+    if (kt1.p3abs() < 1.0e-8) kt1 = Cross(pSplit, FourVector(1.,0.,0.,0.));
+    kt1 *= rkt*std::cos(pt_angle)/kt1.p3abs();
+    FourVector kt2cms = Cross(BoostForCS(pSplit+pSpect, pSplit), kt1);
+    kt2cms *= rkt*std::sin(pt_angle)/kt2cms.p3abs();
+    FourVector kt2 = BoostBackForCS(pSplit+pSpect, kt2cms);
+    pDau1   = pSplit*z      + pSpect*(1.-z)*y + kt1 + kt2; //pi
+    pDau2   = pSplit*(1.-z) + pSpect*z*y      - kt1 - kt2; //pj
+    UpSpect = pSpect*(1.-y); //pk
+  }
 
   // Make colours of daughters
   int col1[2] = {0};
   int col2[2] = {0};
-  int dau1_id = kernels[Kernel]->flav(1);
-  int dau2_id = kernels[Kernel]->flav(2);
+  int dau1_id = kernels[Kernel]->flav(1); //"original" particle
+  int dau2_id = kernels[Kernel]->flav(2); //"new" emitted paricle
   MakeColours( Split, Spect, dau1_id, col1, col2 );
 
   // Add daughters to parton list
   FourVector x;
-  Parton daughter1( Parton( dau1_id, 51, pDau1, x ) ); //Status: 51, shower particles
+  Parton daughter1( Parton( dau1_id, 51, pDau1, x ) ); //Status: 51, active shower particles
   Parton daughter2( Parton( dau2_id, 51, pDau2, x ) );
   daughter1.set_mom1( Split ), daughter1.set_mom2( 0 );
   daughter2.set_mom1( Split ), daughter2.set_mom2( 0 );
@@ -223,29 +204,26 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   parton_list[Spect].set_d2( Rec );
 }
 
-void Shower::MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2])
-{
+void Shower::MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]){
 
   max_colour++;
-
-  int split_id = parton_list[Split].id();
+  int split_id = parton_list[Split].id(); //flavor before split
   int cols[2] = { parton_list[Split].col(), parton_list[Split].acol() };
   int colr[2] = { parton_list[Spect].col(), parton_list[Spect].acol() };
 
   // If quark
   if ( split_id != 21 ) {
-    if ( split_id > 0 ) { //quark
+    if ( split_id > 0 ) { //q --> q + g
       col1[0] = max_colour, col1[1] = 0;
       col2[0] = cols[0], col2[1] = max_colour;
-    }
-    else { //anti-quark
+    } else { //qbar --> qbar +
       col1[0] = 0, col1[1] = max_colour;
       col2[0] = max_colour, col2[1] = cols[1];
     }
   }
   // If gluon
   else if (split_id == 21) {
-    if ( dau_id == 21 ) {
+    if ( dau_id == 21 ) { //g --> g + g
       if ( cols[0] == colr[1] ) {
       	// If recoiler is singlet partner, random assignation
       	if ( cols[1] == colr[0] && dis(gen) > 0.5 ) {
@@ -255,18 +233,15 @@ void Shower::MakeColours( int Split, int Spect, int dau_id, int col1[2], int col
       	}
         col1[0] = max_colour, col1[1] = cols[1];
       	col2[0] = cols[0], col2[1] = max_colour;
-      }
-      else {
+      } else {
         col1[0] = cols[0], col1[1] = max_colour;
 	      col2[0] = max_colour, col2[1] = cols[1];
       }
-    }
-    else {
+    } else {
       if ( dau_id > 0 ) {
         col1[0] = cols[0], col1[1] = 0;
         col2[0] = 0, col2[1] = cols[1];
-      }
-      else {
+      } else {
         col1[0] = 0, col1[1] = cols[1];
         col2[0] = cols[0], col2[1] = 0;
       }

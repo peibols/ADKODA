@@ -8,7 +8,8 @@ using namespace Util;
 namespace Adkoda {
 
 std::vector<Parton> InPartons::PartonList() {
-  int id1, id2;
+  int id1 = -1000;
+  int id2 = -1000;
   int cols1[2], cols2[2];
 
   // Random number generator //FIXME where to initialize and put the random generator?
@@ -20,9 +21,10 @@ std::vector<Parton> InPartons::PartonList() {
   FourVector p0, p1, p2, x;
   std::vector<Parton> hard_list;
 
-  double ecms;
+  double ecms = 0.;
   if (DATA.parton_gun==1) ecms = DATA.pt_max;
-  else if (DATA.parton_gun==0) ecms = 91.188;
+  else if (DATA.parton_gun==0) ecms = 91.1876;
+  else std::cout << "ERROR: parton_gun = 0,1" << std::endl;
   p0.Set( 0., 0., 0., ecms );
   Parton hard_parton_system( Parton(90,-11,p0,x) );
   hard_parton_system.set_mass(ecms);
@@ -55,12 +57,15 @@ std::vector<Parton> InPartons::PartonList() {
       cols2[0]=102, cols2[1]=101;
       id1=dis_int(gen), id2=21;
     }
+    else std::cout << "ERROR: hard_partons = 0-2" << std::endl;
   }
   else if (DATA.parton_gun == 0) { // LO: e-e+ --> jj
     double ecms = 91.188;
     double ct = 2.*dis(gen)-1.;
+    //double ct = 2.*0.5-1.; //FIXME!!!
     double st = std::sqrt(1.-ct*ct);
     double phi = 2.*M_PI*dis(gen);
+    //double phi = 2.*M_PI*0.5; //FIXME!!!
     p1.Set( st*std::cos(phi)*ecms/2., st*std::sin(phi)*ecms/2., ct*ecms/2., ecms/2. );
     p2.Set( -p1.x(), -p1.y(), -p1.z(), p1.t() );
     FourVector pa ( 0., 0., ecms/2., ecms/2. );
@@ -68,6 +73,7 @@ std::vector<Parton> InPartons::PartonList() {
     cols1[0]=101, cols1[1]=0;
     cols2[0]=0,   cols2[1]=101;
     id1=dis_int(gen), id2=-id1;
+    //id1=1, id2=-id1; //FIXME!!!
     double s = (pa+pb)*(pa+pb);
     double t = (pa-p1)*(pa-p1);
     double lome = ME2(id1, s, t);
@@ -88,6 +94,7 @@ std::vector<Parton> InPartons::PartonList() {
     hard_parton_c.set_d2(5);
     hard_list.push_back(hard_parton_c);
   }
+  else std::cout << "ERROR: parton_gun = 0,1" << std::endl;
 
   int stat1 = 23; // Primary, final state
   int stat2 = 23;

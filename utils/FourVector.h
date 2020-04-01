@@ -134,6 +134,13 @@ class FourVector
       return phi;
     };
 
+    double m() { return sqrt(tv*tv - xv*xv - yv*yv - zv*zv); };
+    double m2() { return this->m()*this->m(); };
+
+    double p3abs() { return sqrt(xv*xv + yv*yv + zv*zv); };
+    double p3abs2() { return this->p3abs()*this->p3abs(); };
+
+
     FourVector &operator=(FourVector &c)
     {
       tv = c.t();
@@ -168,12 +175,9 @@ class FourVector
       tv *= f; return *this;}
     inline FourVector& operator/=(double f) {xv /= f; yv /= f; zv /= f;
       tv /= f; return *this;}
-    inline FourVector operator*(double f) const {
-      FourVector tmp = *this; return tmp *= f;}
-    inline FourVector operator/(double f) const {
-      FourVector tmp = *this; return tmp /= f;}
-    inline double operator*(const FourVector& v) const {
-      return tv*v.tv - xv*v.xv - yv*v.yv - zv*v.zv;}
+    inline FourVector operator*(double f) const {FourVector tmp = *this; return tmp *= f;}
+    inline FourVector operator/(double f) const {FourVector tmp = *this; return tmp /= f;}
+    inline double operator*(const FourVector& v) const {return tv*v.tv - xv*v.xv - yv*v.yv - zv*v.zv;}
 
     void rotate_around_z(double theta)
     {

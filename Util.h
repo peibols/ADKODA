@@ -14,7 +14,7 @@
 #endif
 
 #ifndef CF
-#define CF ((NC*NC-1.0)/(2.0*NC))
+#define CF ((NC*NC-1.)/(2.*NC))
 #endif
 
 #ifndef Lambda
@@ -42,8 +42,12 @@
 namespace Util {
 
   double m(const FourVector& v1, const FourVector& v2);
-  FourVector Boost( double v[3], FourVector p);
-  FourVector BoostBack( double v[3], FourVector p);
+  double m2(const FourVector& v1, const FourVector& v2);
+  FourVector Cross(const FourVector& v1, const FourVector& v2);
+  FourVector BoostForCS(FourVector p, FourVector q);
+  FourVector BoostBackForCS(FourVector p, FourVector q);
+  FourVector Boost(double v[3], FourVector p);
+  FourVector BoostBack(double v[3], FourVector p);
 
   void VelCOM( FourVector p1, FourVector p2, double v[3]);
 

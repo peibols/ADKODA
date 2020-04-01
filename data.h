@@ -6,6 +6,7 @@ typedef struct init_data {
   int number_events;
 
   int evol_scale;
+  int shower_kernel;
 
   bool parton_gun;
   int hard_partons;	// 0 for gg, 1 for qq, else for qg
