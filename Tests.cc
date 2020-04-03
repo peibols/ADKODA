@@ -42,13 +42,13 @@ void Test_EnergyMomentumConservation(std::vector<Parton> parton_list) {
   for (unsigned a = 0; a < 4; a++) std::cout << "Total momentum: p_" << a << " = " << total_p[a] << std::endl;
 }
 
-void Test_PrintLundPlane(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile) {
+void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile) {
   int m1 = -1, m2 = -1;
   for (unsigned int ip = 0; ip < parton_list.size(); ip++) { //Find the hardest scattering
-    if (parton_list[ip].stat() == -23 && m1 == -1) m1 = ip;
-    if (parton_list[ip].stat() == -23 && ip != m1 && m2 == -1) { m2 = ip; break; }
+    if (abs(parton_list[ip].stat()) == 23 && m1 == -1) m1 = ip;
+    if (abs(parton_list[ip].stat()) == 23 && ip != m1 && m2 == -1) { m2 = ip; break; }
   }
-  if (parton_list[m1].stat() < 0){ //It decays
+  if (parton_list[m1].stat() < 0) { //It decays
     int mom = m1;
     int d1  = parton_list[mom].d1();
     int d2  = parton_list[mom].d2();
@@ -83,6 +83,7 @@ void Test_PrintLundPlane(std::vector<Parton> parton_list, double event_weight, s
       else mom = d1;
     }
   }
+  outfile << "#weight: " << event_weight << std::endl;
 }
 
-}
+} // end namespace Adkoda

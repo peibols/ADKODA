@@ -11,6 +11,6 @@ void Test_PrintFinalPartons(std::vector<Parton> parton_list, double event_weight
 
 void Test_EnergyMomentumConservation(std::vector<Parton> parton_list);
 
-void Test_PrintLundPlane(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile);
+void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile);
 
-}
+} // end namespace Adkoda

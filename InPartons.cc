@@ -60,12 +60,9 @@ std::vector<Parton> InPartons::PartonList() {
     else std::cout << "ERROR: hard_partons = 0-2" << std::endl;
   }
   else if (DATA.parton_gun == 0) { // LO: e-e+ --> jj
-    double ecms = 91.188;
     double ct = 2.*dis(gen)-1.;
-    //double ct = 2.*0.5-1.; //FIXME!!!
     double st = std::sqrt(1.-ct*ct);
     double phi = 2.*M_PI*dis(gen);
-    //double phi = 2.*M_PI*0.5; //FIXME!!!
     p1.Set( st*std::cos(phi)*ecms/2., st*std::sin(phi)*ecms/2., ct*ecms/2., ecms/2. );
     p2.Set( -p1.x(), -p1.y(), -p1.z(), p1.t() );
     FourVector pa ( 0., 0., ecms/2., ecms/2. );
@@ -73,7 +70,6 @@ std::vector<Parton> InPartons::PartonList() {
     cols1[0]=101, cols1[1]=0;
     cols2[0]=0,   cols2[1]=101;
     id1=dis_int(gen), id2=-id1;
-    //id1=1, id2=-id1; //FIXME!!!
     double s = (pa+pb)*(pa+pb);
     double t = (pa-p1)*(pa-p1);
     double lome = ME2(id1, s, t);
@@ -87,7 +83,7 @@ std::vector<Parton> InPartons::PartonList() {
     hard_list.push_back(hard_parton_a);
     hard_list.push_back(hard_parton_b);
     Parton hard_parton_c( Parton(23,-22,pa+pb,x) ); //id:22 (Z0), stat:22 intermediate
-    hard_parton_c.set_mass(91.188);
+    hard_parton_c.set_mass(91.1876);
     hard_parton_c.set_mom1(1); //FIXME set it automatically
     hard_parton_c.set_mom2(2);
     hard_parton_c.set_d1(4);
@@ -105,6 +101,8 @@ std::vector<Parton> InPartons::PartonList() {
   hard_parton2.set_mom1(hard_list.size()-1);
   hard_parton1.set_cols(cols1);
   hard_parton2.set_cols(cols2);
+  hard_parton1.set_scale(ecms);
+  hard_parton2.set_scale(ecms);
 
   hard_list.push_back(hard_parton1);
   hard_list.push_back(hard_parton2);

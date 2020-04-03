@@ -104,6 +104,9 @@ class Parton : protected fjcore::PseudoJet
     void set_mass(double mass);
     double mass();
 
+    void set_scale(double scale);
+    double scale();
+
     void set_virt(double virt);
     double virt();
 
@@ -134,7 +137,7 @@ class Parton : protected fjcore::PseudoJet
     int _id;
     int _stat;
     int _mom1, _mom2, _d1, _d2;
-    double _mass;
+    double _mass, _scale;
 };
 
 } // end namespace Adkoda

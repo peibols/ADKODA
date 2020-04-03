@@ -35,16 +35,15 @@ int main(int argc, char **argv) {
 
     if (iEv % 1000 == 0) cout << "Event: " <<  iEv << endl;
     bergen.next();
-    bergen.print();
+    //bergen.print();
 
     //Test modules
     double event_weight = bergen.get_event_weight();
     std::vector<Parton> parton_list = bergen.get_parton_list();
-    Test_Weights(parton_list, event_weight, outfile_test_weights);
+    //Test_Weights(parton_list, event_weight, outfile_test_weights);
     Test_PrintFinalPartons(parton_list, event_weight, outfile_test_FinalPartons);
-    Test_EnergyMomentumConservation(parton_list);
-    Test_PrintLundPlane(parton_list, event_weight, outfile_test_LundPlane);
-
+    //Test_EnergyMomentumConservation(parton_list);
+    Test_PrintLundPlane_history(parton_list, event_weight, outfile_test_LundPlane);
   }
   cout << "End Program" << endl;
 
@@ -54,6 +53,4 @@ int main(int argc, char **argv) {
   outfile_test_LundPlane.close();
 
   return 0;
-
-// End program
-}
+} // End program
