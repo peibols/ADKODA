@@ -3,6 +3,8 @@
 #include "BerGEN.h"
 #include "Tests.h"
 
+#include "HepMC3/WriterAscii.h"
+
 using namespace Adkoda;
 using namespace Util;
 using namespace std;
@@ -18,7 +20,9 @@ int main(int argc, char **argv) {
   remove("test/test_LundPlane.out");
   remove("test/test_kinematics.out");
   remove("test/test_veto.out");
+  remove("test/test_HepMC3.out");
 
+  HepMC3::WriterAscii outfile_test_HepMC3("test/test_HepMC3.out");
   ofstream outfile_test_weights;
   if (!outfile_test_weights.is_open()) outfile_test_weights.open("test/test_weights.out", ios_base::app);
   ofstream outfile_test_FinalPartons;
@@ -44,6 +48,9 @@ int main(int argc, char **argv) {
     Test_PrintFinalPartons(parton_list, event_weight, outfile_test_FinalPartons);
     Test_EnergyMomentumConservation(parton_list);
     Test_PrintLundPlane(parton_list, event_weight, outfile_test_LundPlane);
+
+    // HepMC3 Ascii writer
+    write_HepMC3_event(parton_list, event_weight, outfile_test_HepMC3);
 
   }
   cout << "End Program" << endl;

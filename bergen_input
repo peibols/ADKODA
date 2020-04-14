@@ -1,14 +1,14 @@
-number_events 10
+number_events 1
 # evol_scale: pt (0), m (1), tf (2), theta (3)
 evol_scale 0
 # LO: ee2qqbar (0), diparton gun (1)
-parton_gun 0
+parton_gun 1
 # hard_partons: gg 0, qq 1, qg 2
 hard_partons 0
 # COM energy (Shower max scale)
-pt_max 91.1876
+pt_max 20
 # Shower min scale
 pt_min 1.0
 # Shower kernel: A-P (0), C-S (1)
-shower_kernel 1
+shower_kernel 0
 EndOfData
