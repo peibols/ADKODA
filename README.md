@@ -6,7 +6,7 @@ HepMC3 needs to be installed, and the following paths need to be set:
 
 `HEPMC3_BIN`, `HEPMC3_INCLUDE` , `HEPMC3_LIB`.
 
-One also needs to add `HEPMC3_BIN` to `LD_LIBRARY_PATH`.
+One also needs to add `HEPMC3_LIB` to `LD_LIBRARY_PATH`.
 
 Following Appendix A in the [HepMC3 manual](https://arxiv.org/pdf/1912.08005.pdf).
 
