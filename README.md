@@ -25,3 +25,22 @@ Status codes for vertices:
 | 1             | 1->2 splitting	 	|
 | 2      	| 1->1 splitting (carbon copy)  |
 
+## Pythia8
+
+Pythia8 needs to be installed, and the following paths need to be set:
+
+`PYTHIA8_INCLUDE` , `PYTHIA8_LIB`.
+
+One also needs to add `PYTHIA8_LIB` to `LD_LIBRARY_PATH`.
+
+Additionally, one needs to set the path `PYTHIA8DATA` to point to the `xmldoc` folder in the Pythia8 installation. For example, in my profile I have:
+
+`export PYTHIA8DATA="/Users/peibols/Software/pythia8240/share/Pythia8/xmldoc"`.
+
+### Identified unsolved issues
+
++ When Pythia8 is used, we also keep the beam remnants, necessary to keep track of momentum conservation and color flow. They have `status=63`. They are properly ignored in `Evolution.cc`, but they seem to cause, sometimes, trouble in test function `Test_PrintLundPlane`.
+
++ HepMC3 writer is not properly adapted to account for including beam remnants
+
++ Still need to set the daughters of incoming hard partons with `status=-21`. This is mostly necessary in order for them to be printed in the HepMC3 format.
