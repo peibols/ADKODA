@@ -2,7 +2,7 @@ number_events 1
 # evol_scale: pt (0), m (1), tf (2), theta (3)
 evol_scale 0
 # LO: ee2qqbar (0), diparton gun (1)
-parton_gun 1
+parton_gun 2
 # hard_partons: gg 0, qq 1, qg 2
 hard_partons 0
 # COM energy (Shower max scale)

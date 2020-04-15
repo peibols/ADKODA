@@ -45,10 +45,13 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
 
 }
 
-void Shower::init ( InPartons inpartons) {
+void Shower::init (InPartons *inpartons) {
 
-  parton_list = inpartons.PartonList();
-  event_weight = inpartons.event_weight;
+  if (DATA.parton_gun==0 || DATA.parton_gun==1) parton_list = inpartons->PartonList();
+  else {
+    parton_list = inpartons->PythiaPartonList();
+  }
+  event_weight = inpartons->event_weight;
 
   // Fix minimum and maximum scale
   double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;

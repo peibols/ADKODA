@@ -20,7 +20,7 @@ void BerGEN::init() {
 
 void BerGEN::next() {
 
-  shower->init(*inpartons);
+  shower->init(inpartons);
   event_weight = shower->get_event_weight();
   shower->run();
   parton_list = shower->get_parton_list();
@@ -57,7 +57,7 @@ InitData BerGEN::read_in_parameters(std::string input_file) {
   parameter_list.evol_scale = temp_evol_scale;
 
   // Switch for parton gun
-  bool temp_parton_gun = true;
+  int temp_parton_gun = true;
   tempinput = Util::StringFind4(input_file, "parton_gun");
   if (tempinput != "empty") std::istringstream(tempinput) >> temp_parton_gun;
   parameter_list.parton_gun = temp_parton_gun;

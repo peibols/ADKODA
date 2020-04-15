@@ -44,10 +44,11 @@ int main(int argc, char **argv) {
     //Test modules
     double event_weight = bergen.get_event_weight();
     std::vector<Parton> parton_list = bergen.get_parton_list();
+
     Test_Weights(parton_list, event_weight, outfile_test_weights);
     Test_PrintFinalPartons(parton_list, event_weight, outfile_test_FinalPartons);
     Test_EnergyMomentumConservation(parton_list);
-    Test_PrintLundPlane(parton_list, event_weight, outfile_test_LundPlane);
+    //Test_PrintLundPlane(parton_list, event_weight, outfile_test_LundPlane);
 
     // HepMC3 Ascii writer
     write_HepMC3_event(parton_list, event_weight, outfile_test_HepMC3);

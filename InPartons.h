@@ -4,6 +4,7 @@
 #include <vector>
 #include <random>
 
+#include "Pythia8/Pythia.h"
 #include "Parton.h"
 #include "data.h"
 
@@ -13,12 +14,15 @@ class InPartons {
 
   public:
 
-    InPartons(const InitData &DATA_in) : DATA(DATA_in) {}
+    InPartons(const InitData &DATA_in);
     ~InPartons() {}
 
    double event_weight;
    std::vector<Parton> PartonList();
    double ME2(int id, double s, double t);
+
+   void PythiaInit();
+   std::vector<Parton> PythiaPartonList();
 
  protected:
 
@@ -29,6 +33,8 @@ class InPartons {
   private:
 
     const InitData &DATA;
+
+    Pythia8::Pythia pythia;
 };
 
 } // end namespace Adkoda

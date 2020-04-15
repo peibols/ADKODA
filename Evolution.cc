@@ -17,10 +17,12 @@ bool Shower::evolve() {
   for (unsigned int iSplit=0; iSplit<parton_list.size(); iSplit++) { // Praticle list scan
     Parton p_split = parton_list[iSplit];
     if (p_split.stat()<0) continue; // Skip if inactive parton
+    if (p_split.stat()==63) continue; // Skip if remnant
     for (unsigned int iSpect=0; iSpect<parton_list.size(); iSpect++) { // Find dipole
       if (iSplit == iSpect) continue;
       Parton p_spect = parton_list[iSpect];
       if (p_spect.stat()<0) continue; // Skip if inactive
+      if (p_spect.stat()==63) continue; // Skip if remnant
       if (!p_split.ColourConnected(p_spect)) continue; // Skip if not colour connected
       for (int iKernel=0; iKernel<kernels.size(); iKernel++) { // Loop over possible kernels
         if (kernels[iKernel]->flav(0) != p_split.id()) continue; // Skip if kernel not applies
