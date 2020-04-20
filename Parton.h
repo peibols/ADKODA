@@ -123,12 +123,14 @@ class Parton : protected fjcore::PseudoJet
 
     FourVector p();
 
-    void set_x(const FourVector& x);
+    void set_x(const FourVector& x); //Creation point in the lab frame
     const FourVector x();
 
     bool ColourConnected(Parton& p);
 
     void display();
+
+    std::vector<int> motherList() const;
 
   private:
 

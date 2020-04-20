@@ -18,6 +18,7 @@ class BerGEN {
   protected:
 
     double event_weight;
+    double event_xsec;
     std::vector<Parton> parton_list;
 
   public:
@@ -39,6 +40,7 @@ class BerGEN {
 
     void print();
     double get_event_weight() { return event_weight; }
+    double get_event_xsec() { return event_xsec; }
     std::vector<Parton> get_parton_list() { return parton_list; }
 
 };

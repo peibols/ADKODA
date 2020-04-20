@@ -11,14 +11,14 @@
 namespace Adkoda {
 
 //TEST MODULE: Save the initiator e-e+ kinematics and event_weights
-void Test_Weights(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile) {
+void Test_Weights(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile) {
   outfile << parton_list[4].e()  << " " << parton_list[4].px() << " " <<
              parton_list[4].py() << " " << parton_list[4].pz() << " " <<
-             event_weight << std::endl;
+             event_xsec << event_weight << std::endl;
 }
 
 //TEST MODULE: Save final particles (px, py, pz, E)
-void Test_PrintFinalPartons(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile) {
+void Test_PrintFinalPartons(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile) {
   int multi = 0;
   for (unsigned int ip = 0; ip < parton_list.size(); ip++) {
     //if (parton_list[ip].stat()<0 && abs(parton_list[ip].id())!=11) continue; //MCnet python durham algorithm needs the incoming  particles.
@@ -27,8 +27,9 @@ void Test_PrintFinalPartons(std::vector<Parton> parton_list, double event_weight
              << parton_list[ip].pz() << " " << parton_list[ip].e() << std::endl;
      multi++;
   }
-  outfile << "#event weight: " << event_weight << " multiplicity: " << multi << std::endl;
+  outfile << "#event xsec: " << event_xsec << ", weight: " << event_weight << ", multiplicity: " << multi << std::endl;
 }
+
 
 void Test_EnergyMomentumConservation(std::vector<Parton> parton_list) {
   double total_p[4] = {0., 0., 0., 0.};
@@ -42,7 +43,8 @@ void Test_EnergyMomentumConservation(std::vector<Parton> parton_list) {
   for (unsigned a = 0; a < 4; a++) std::cout << "Total momentum: p_" << a << " = " << total_p[a] << std::endl;
 }
 
-void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile) {
+//TEST MODULE: Save the primary Lund plane using the history and FastJet definition of the variables
+void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile) {
   int m1 = -1, m2 = -1;
   for (unsigned int ip = 0; ip < parton_list.size(); ip++) { //Find the hardest scattering
     if (abs(parton_list[ip].stat()) == 23 && m1 == -1) m1 = ip;
@@ -53,9 +55,10 @@ void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_w
     int d1  = parton_list[mom].d1();
     int d2  = parton_list[mom].d2();
     if (d1==d2) mom = m2; //Find the initial splitter
+    //Soft Drop parameters
     double z_cut = 0.;
     double beta = 0.;
-    double R = M_PI;
+    double R = 3.;
     while (parton_list[mom].stat() < 0) {
       d1 = parton_list[mom].d1();
       d2 = parton_list[mom].d2();
@@ -65,17 +68,16 @@ void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_w
           d1 = d2;
           d2 = temp;
         }
-        double Delta = std::sqrt(std::pow(parton_list[d1].rap() - parton_list[d2].rap(), 2.) +
-                                 std::pow(parton_list[d1].phi() - parton_list[d2].phi(), 2.));
-        double z     = parton_list[d2].pt() / (parton_list[d1].pt() + parton_list[d2].pt());
+        double Delta    = Util::Delta(parton_list[d1].p(), parton_list[d2].p());
+        double z        = parton_list[d2].pt() / (parton_list[d1].pt() + parton_list[d2].pt());
         if (z > z_cut * pow(Delta/R, beta) && Delta < R) { // Soft Drop condition.
-          double kt      = parton_list[d2].pt() * Delta;
-          double mass    = Util::m(parton_list[d1].p(), parton_list[d2].p());
-          double qtilde2 = mass*mass / z / (1.-z);
-          double energy  = parton_list[d1].e() + parton_list[d2].e();
-          double tf      = 2. * energy / mass / mass;
-          outfile << qtilde2 << " " << z << " " << energy << " " << kt*kt << " "
-                  << Delta << " " << mass*mass << " " << tf << " " << "1." << std::endl;
+          double kt     = parton_list[d2].pt() * Delta;
+          double m2     = Util::m2(parton_list[d1].p(), parton_list[d2].p()); //Mass of the splitter
+          double qt2    = m2 / z / (1.-z);
+          double energy = parton_list[d1].e() + parton_list[d2].e(); //Energy of the splitter
+          double tf     = 2. * energy / m2;
+          outfile << qt2 << " " << z << " " << energy << " " << kt*kt << " "
+                  << Delta << " " << m2 << " " << tf << " " << "1." << std::endl;
         }
         mom = d1;
       }
@@ -83,7 +85,18 @@ void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_w
       else mom = d1;
     }
   }
-  outfile << "#weight: " << event_weight << std::endl;
+  outfile << "#xsec: " << event_xsec << "weight: " << event_weight << std::endl;
 }
+
+/*
+//TEST MODULE: Quench particle history by counting the splitting inside the medium
+void Simple_Quenching(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile) {
+  int inSplit = 0;
+  for (unsigned int ip = 0; ip < parton_list.size(); ip++) { //Find the hardest scattering
+    if (parton_list[ip].x().t()*0.1973 < Rmed_in_fm) inSplit++;
+  }
+  Test_PrintFinalPartons(parton_list, event_xsec, std::pow(Quench, inSplit), outfile);
+}
+*/
 
 } // end namespace Adkoda

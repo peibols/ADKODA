@@ -22,6 +22,7 @@ bool Shower::evolve() {
       Parton p_spect = parton_list[iSpect];
       if (p_spect.stat()<0) continue; // Skip if inactive
       if (!p_split.ColourConnected(p_spect)) continue; // Skip if not colour connected
+      //FIXME Nf should depend on t_max!
       for (int iKernel=0; iKernel<kernels.size(); iKernel++) { // Loop over possible kernels
         if (kernels[iKernel]->flav(0) != p_split.id()) continue; // Skip if kernel not applies
         double mar2 = m2(p_split.p(), p_spect.p());
@@ -53,33 +54,38 @@ bool Shower::evolve() {
   double Q2 = 0.;
   if      (DATA.evol_scale == 0) Q2 = t / z / ( 1.0 - z );
   else if (DATA.evol_scale == 1) Q2 = t;
-  else if (DATA.evol_scale == 2) Q2 = t * 2.0 * std::sqrt(wmar2)/2.0;
+  else if (DATA.evol_scale == 2) Q2 = t * 2.0 * std::sqrt(wmar2)/2.0; //FIXME energy for CS
   else if (DATA.evol_scale == 3) Q2 = t * z * (1.0 - z);
   else std::cout << "ERROR: evol_scale = 0-3" << std::endl;
 
   double pt2ev    = Q2 * z * (1.-z);
   double pt2_daug = Q2 * ( z * (1.-z) * std::pow(wmar2 + Q2, 2.) - wmar2 * Q2 ) / std::pow( wmar2 - Q2, 2.);
   double y = 0.;
-  if (DATA.shower_kernel==1) y = t/wmar2/z/(1.-z);
+  if (DATA.shower_kernel==1) y = Q2/wmar2;
   if (y < 1.) {
     // Accept / Reject veto procedure
     double f = (1.-y) * alpha_s(pt2ev) * kernels[wKernel]->Value(z, y);
     double g = max_alpha_s * kernels[wKernel]->Estimate(z);
+    if (pt2ev < 1.) std::cout << "ptev < ptmin" << std::endl;
     if (DATA.shower_kernel==0) { // If does not succeed, have a next try
-      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0 ) { return 1; }  //veto, scale in between the min/max scale, physical pt.
+      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0) { return 1; }  //veto, scale in between the min/max scale, physical pt.
     } else if (DATA.shower_kernel==1) {
-      if (f/g < dis(gen) || y > 1.) { return 1; }
+      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min) { return 1; } //FIXME missing constraint?
     } else std::cout << "ERROR: shower_kernel = 0,1" << std::endl;
 
     // If success, set new kinematics of system
-    Update(wSplit, wSpect, wKernel, wmar2, z, y, Q2); //FIXME Why is there no additional t --> z^2*t decrision?
+    Update(wSplit, wSpect, wKernel, wmar2, z, y, Q2);
 
-/*
+
     //TEST MODULE: print all (z,t)
     std::ofstream outfile_test;
     if (!outfile_test.is_open()) outfile_test.open("test/test_veto.out", std::ios_base::app);
-    outfile_test  << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << " " << y << std::endl;
-*/
+    double qt2   = Q2/z/(1.-z);
+    double en    = (wmar2+Q2)/2./std::sqrt(wmar2);
+    double theta = std::sqrt(qt2)/en;
+    double tf    = 2.*en/Q2;
+    outfile_test << qt2 << " " << z << " " << en << " " << pt2ev << " " <<
+                    theta << " " << Q2 << " " << tf << " " << 1. << std::endl;
 /*
     //TEST MODULE: stop at the first branch and print veto variables and kinematics
     std::ofstream outfile_test_veto;
@@ -104,47 +110,52 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   FourVector pSplit = parton_list[ Split ].p();
   FourVector pSpect = parton_list[ Spect ].p();
   FourVector UpSpect, pDau1, pDau2;
+  FourVector xa, xr;
   double pt_angle = 2. * M_PI * dis(gen); //FIXME include polarization: 10.1146/annurev.ns.36.120186.001345
   if (DATA.shower_kernel==0) {
-    // COM frame
     double beta[3] = {0.};
     VelCOM(pSplit, pSpect, beta); // Find boost vector to COM.
-    // Boost to COM frame
+    // Boost to COM frame and align with z
     FourVector BpSplit = Boost(beta, pSplit);
-    // Perform rotation of emitter along z, store angle and axis
     double angle = -1000.;
     double k[3]  = {0.};
-    AlignWithZ(BpSplit, angle, k); // Find proper andle and k to rotate around.
+    AlignWithZ(BpSplit, angle, k);
 
-    // Update kinematics of spectator
+    // Update kinematics
     UpSpect.Set(0., 0., -(mar2-Q2) / 2. / std::sqrt(mar2), (mar2-Q2) / 2. / std::sqrt(mar2));
-
-    // Kinematics of daughters
     double Ea  = (mar2+Q2) / 2. / std::sqrt( mar2 );
     double E1  = z * Ea;
     double E2  = (1.-z) * Ea;
     double pt2 = Q2 * ( z * (1.-z) * std::pow(mar2+Q2, 2.) - mar2*Q2 ) / std::pow(mar2-Q2, 2.);
     if (pt2 < 0.) { std::cout << "Error: 0 > pt = " << pt2 << std::endl; exit(0); }
-    double Pza = ( mar2 - Q2 ) / 2.0 / std::sqrt(mar2);
+    double Pza = ( mar2 - Q2 ) / 2. / std::sqrt(mar2);
     double pz1 = std::sqrt(Ea*Ea * z*z - pt2);
     double pz2 = Pza - pz1;
-
     pDau1.Set(std::sqrt(pt2) * std::cos(pt_angle), std::sqrt(pt2) * std::sin(pt_angle), pz1, E1);
     pDau2.Set(-pDau1.x(), -pDau1.y(), pz2, E2);
+
+    // Creation points in the COM frame
+    double tf = 2. * Ea / Q2; //TODO Use masses
+    xa.Set(0., 0., tf, tf);
+    xr.Set(0., 0., -tf, tf);
 
     // Rotate & Boost back to original frame
     Rotation(UpSpect, -angle, k);
     Rotation(pDau1,   -angle, k);
     Rotation(pDau2,   -angle, k);
+    Rotation(xa,   -angle, k);
+    Rotation(xr,   -angle, k);
 
     UpSpect = BoostBack(beta, UpSpect);
     pDau1   = BoostBack(beta, pDau1);
     pDau2   = BoostBack(beta, pDau2);
+    xa   = BoostBack(beta, xa);
+    xr   = BoostBack(beta, xr);
   }
   else if(DATA.shower_kernel==1) {
     double rkt = std::sqrt(mar2*y*z*(1.-z));
     FourVector kt1    = Cross(pSplit, pSpect);
-    if (kt1.p3abs() < 1.e-8) kt1 = Cross(pSplit, FourVector(1.,0.,0.,0.));
+    if (kt1.p3abs() < 1.e-8) kt1 = Cross(pSplit, FourVector(1.,0.,0.,0.)); //FIXME works if py != 0.
     kt1    *= rkt*std::cos(pt_angle)/kt1.p3abs();
     FourVector kt2cms = Cross(BoostForCS(pSplit+pSpect, pSplit), kt1);
     kt2cms *= rkt*std::sin(pt_angle)/kt2cms.p3abs();
@@ -152,6 +163,13 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
     pDau1   = pSplit*z      + pSpect*(1.-z)*y + kt1 + kt2; //pi
     pDau2   = pSplit*(1.-z) + pSpect*z*y      - kt1 - kt2; //pj
     UpSpect = pSpect*(1.-y); //pk
+
+    // Creation points in the lab frame
+    double tf = 2. * pSplit.t() / m2(pDau1, pDau2); //TODO use masses
+    double pSplit_abs = pSplit.p3abs();
+    double pSpect_abs = pSpect.p3abs();
+    xa.Set(pSplit.x()*tf/pSplit_abs, pSplit.y()*tf/pSplit_abs, pSplit.z()*tf/pSplit_abs, tf);
+    xr.Set(pSpect.x()*tf/pSpect_abs, pSpect.y()*tf/pSpect_abs, pSpect.z()*tf/pSpect_abs, tf);
   }
 
   // Make colours of daughters
@@ -162,9 +180,8 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   MakeColours( Split, Spect, dau1_id, col1, col2 );
 
   // Add daughters to parton list
-  FourVector x;
-  Parton daughter1(Parton(dau1_id, 51, pDau1, x)); //Status: 51, active shower particles
-  Parton daughter2(Parton(dau2_id, 51, pDau2, x));
+  Parton daughter1(Parton(dau1_id, 51, pDau1, xa+parton_list[Split].x())); //Status: 51, active shower particles
+  Parton daughter2(Parton(dau2_id, 51, pDau2, xa+parton_list[Split].x()));
   daughter1.set_mom1(Split), daughter1.set_mom2(0);
   daughter2.set_mom1(Split), daughter2.set_mom2(0);
   daughter1.set_cols(col1);
@@ -181,6 +198,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   recoiler.reset_momentum(UpSpect);
   recoiler.set_mom1(Spect), recoiler.set_mom2(Spect);
   recoiler.set_stat(52);
+  recoiler.set_x(xr+parton_list[Spect].x());
   parton_list.push_back(recoiler);
   int Rec = int(parton_list.size()) - 1;
 

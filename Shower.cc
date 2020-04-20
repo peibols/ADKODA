@@ -50,6 +50,7 @@ void Shower::init ( InPartons inpartons) {
 
   parton_list  = inpartons.PartonList();
   event_weight = inpartons.event_weight;
+  event_xsec = inpartons.event_xsec;
 
   // Fix minimum and maximum scale
   double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;
@@ -182,14 +183,15 @@ double Shower::alpha_s( double t ) {
 
 
 void Shower::print() {
-
-  std::cout << "Event weight: " << event_weight << std::endl;
-  std::cout << "ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t m" << std::endl;
+  std::cout << "#Event weight: " << event_weight << std::endl;
+  std::cout << "#ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t\t py\t\t pz\t\t E\t\t m\t\t"
+  //<< "pt2\t\t"
+  //<< "x\t\t y\t\t z\t\t t"
+  << std::endl;
   for (int ip=0; ip<parton_list.size(); ip++) {
     std::cout << ip << "\t ";
     parton_list[ip].display();
   }
-
   return;
 }
 

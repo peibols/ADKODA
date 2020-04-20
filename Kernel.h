@@ -25,51 +25,42 @@ class Kernel {
 
 };
 
-//Alterelli-Parisi Splitting Functions
+//Altarelli-Parisi Splitting Functions
 class Pgg : public Kernel { //g --> g + g
   public:
     using Kernel::Kernel;
-    double Value ( double z, double y ) {return CA * ( z / (1.0 - z) + (1.0 - z) / z + z * (1.0 - z) );}
-    double Estimate ( double z ) {return CA * ( 1.0 / z + 1.0 / (1.0 - z) );}
-    double Integral ( double zm, double zp ) {return CA * std::log( (zp * (1.0 - zm)) / (zm * (1.0 - zp)) );}
-    double GenerateZ ( double zm, double zp , double R) { return 1.0 / ( 1.0 + (1.0 - zm)/zm * std::pow((zp * (1.0 - zm)) / (zm * (1.0 - zp)), -R) );}
+    double Value ( double z, double y ) {return CA * ( z / (1.-z) + (1.-z) / z + z * (1.-z) );}
+    double Estimate ( double z ) {return CA * ( 1. / z + 1. / (1.-z) );}
+    double Integral ( double zm, double zp ) {return CA * std::log( (zp*(1.-zm)) / (zm*(1.-zp)) );}
+    double GenerateZ ( double zm, double zp , double R) { return 1. / ( 1. + (1.-zm)/zm * std::pow((zp*(1.-zm)) / (zm*(1.-zp)), -R) );}
 };
 
 class Pqq : public Kernel { //q --> q + g
   public:
     using Kernel::Kernel;
-    double Value ( double z, double y ) {return CF * (1.0 + z * z) / (1.0 - z);}
-    double Estimate ( double z ) {return CF * 2.0 / (1.0 - z);}
-    double Integral ( double zm, double zp ) {return CF * 2.0 * std::log( (1.0 - zm) / (1.0 - zp) );}
+    double Value ( double z, double y ) {return CF * (1.+z*z) / (1.-z);} //FIXME this kernel should be fine.
+    double Estimate ( double z ) {return CF * 2. / (1.-z);}
+    double Integral ( double zm, double zp ) {return CF * 2. * std::log((1.-zm) / (1.-zp));}
     double GenerateZ ( double zm, double zp , double R) {return 1.0 + (zm - 1.0) * std::pow( (1.0 - zp) / (1.0 - zm), R );}
 };
 
 class Pgq : public Kernel { //g --> q + qbar
   public:
     using Kernel::Kernel;
-    double Value ( double z, double y ) {return TR * ( z * z + ( 1.0 - z ) * ( 1.0 - z ) ); } //FIXME there is a 1/2 difference in AP and CS.
+    double Value ( double z, double y ) {return TR * (z*z + (1.-z)*(1.-z)); } //FIXME there is a 1/2 difference in AP and CS.
     double Estimate ( double z ) {return TR;}
-    double Integral ( double zm, double zp ) {return TR * ( zp - zm );}
-    double GenerateZ ( double zm, double zp , double R) {return zm + R * ( zp - zm ); }
+    double Integral ( double zm, double zp ) {return TR * (zp - zm);}
+    double GenerateZ ( double zm, double zp , double R) {return zm + R * (zp - zm); }
 };
 
 //Catani-Seymour Splitting Functions
 class Pgg_CS : public Kernel {//g --> g + g
   public:
     using Kernel::Kernel;
-    double Value (double z, double y) {return CA / 2. * ( 2./(1.-z*(1.-y)) - 2. + z*(1.-z) );}
+    double Value (double z, double y) {return CA / 2. * ( 2./(1.-z*(1.-y)) - 2. + z*(1.-z) );} //FIXME extra 1/2, not symmetrized in z?
     double Estimate (double z) {return CA / (1.-z);}
     double Integral (double zm, double zp) {return CA * std::log((1.-zm)/(1.-zp));}
     double GenerateZ (double zm, double zp, double R) {return 1. + (zp-1.) * std::pow((1.-zm)/(1.-zp), R);}
-};
-
-class Pgq_CS : public Kernel {//g --> q + qbar
-  public:
-    using Kernel::Kernel;
-    double Value (double z, double y) {return TR/2. * (1. - 2.*z*(1.-z));}
-    double Estimate (double z) {return TR/2.;}
-    double Integral (double zm, double zp) {return TR/2. * (zp-zm);}
-    double GenerateZ (double zm, double zp, double R) {return zm + (zp-zm) * R;}
 };
 
 class Pqq_CS : public Kernel {//q --> q + g
@@ -81,6 +72,14 @@ class Pqq_CS : public Kernel {//q --> q + g
     double GenerateZ (double zm, double zp, double R) {return 1. + (zp-1.) * std::pow((1.-zm)/(1.-zp), R);}
 };
 
+class Pgq_CS : public Kernel {//g --> q + qbar
+  public:
+    using Kernel::Kernel;
+    double Value (double z, double y) {return TR/2. * (1. - 2.*z*(1.-z));} //FIXME extra 1/2?
+    double Estimate (double z) {return TR/2.;}
+    double Integral (double zm, double zp) {return TR/2. * (zp-zm);}
+    double GenerateZ (double zm, double zp, double R) {return zm + (zp-zm) * R;}
+};
 
 } // end namespace Adkoda
 
