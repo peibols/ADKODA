@@ -1,4 +1,4 @@
-number_events 10
+number_events 10000
 # evol_scale: pt (0), m (1), tf (2), theta (3)
 evol_scale 0
 # LO: ee2qqbar (0), diparton gun (1)

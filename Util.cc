@@ -6,6 +6,11 @@
 
 namespace Util {
 
+  double Delta(FourVector v1, FourVector v2) {
+      return std::sqrt(std::pow(v1.rapidity() - v2.rapidity(), 2.) +
+                       std::pow(v1.phi() - v2.phi(), 2.));
+    }
+
 double m(const FourVector& v1, const FourVector& v2) {
     double m2 = std::pow(v1.t() + v2.t(), 2.) - std::pow(v1.x() + v2.x(), 2.)
        - std::pow(v1.y() + v2.y(), 2.) - std::pow(v1.z() + v2.z(), 2.);

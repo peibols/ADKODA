@@ -36,6 +36,7 @@ class Shower {
     void MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]);
 
     double get_event_weight() { return event_weight; }
+    double get_event_xsec() { return event_xsec; }
     std::vector<Parton> get_parton_list() { return parton_list; }
 
   protected:
@@ -46,6 +47,7 @@ class Shower {
 
     std::vector<Kernel*> kernels;
     double event_weight;
+    double event_xsec;
     std::vector<Parton> parton_list;
     int max_colour;
     double pt_min;

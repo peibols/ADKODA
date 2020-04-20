@@ -2,6 +2,7 @@
 #include <fstream>
 #include "BerGEN.h"
 #include "Tests.h"
+#include "HepMC3/WriterAscii.h"
 
 using namespace Adkoda;
 using namespace Util;
@@ -18,7 +19,9 @@ int main(int argc, char **argv) {
   remove("test/test_LundPlane.out");
   remove("test/test_kinematics.out");
   remove("test/test_veto.out");
+  remove("test/test_HepMC3.out");
 
+  HepMC3::WriterAscii outfile_test_HepMC3("test/test_HepMC3.hepmc");
   ofstream outfile_test_weights;
   if (!outfile_test_weights.is_open()) outfile_test_weights.open("test/test_weights.out", ios_base::app);
   ofstream outfile_test_FinalPartons;
@@ -26,27 +29,31 @@ int main(int argc, char **argv) {
   ofstream outfile_test_LundPlane;
   if (!outfile_test_LundPlane.is_open()) outfile_test_LundPlane.open("test/test_LundPlane.out", ios_base::app);
 
-  cout << "Start Program" << endl;
+  cout << "#Start Program" << endl;
 
   BerGEN bergen(input_file);
   int nEv = bergen.number_events();
   bergen.init();
   for (int iEv = 0; iEv < nEv; iEv++) {
 
-    if (iEv % 1000 == 0) cout << "Event: " <<  iEv << endl;
+    if (iEv % 1000 == 0) cout << "#Event: " <<  iEv << endl;
     bergen.next();
-    bergen.print();
+    //bergen.print();
 
     //Test modules
-    double event_weight = bergen.get_event_weight();
-    std::vector<Parton> parton_list = bergen.get_parton_list();
-    Test_Weights(parton_list, event_weight, outfile_test_weights);
-    Test_PrintFinalPartons(parton_list, event_weight, outfile_test_FinalPartons);
-    Test_EnergyMomentumConservation(parton_list);
-    Test_PrintLundPlane(parton_list, event_weight, outfile_test_LundPlane);
+    //double event_weight = bergen.get_event_weight();
+    //double event_xsec   = bergen.get_event_xsec();
+    //std::vector<Parton> parton_list = bergen.get_parton_list();
+    //Test_Weights(parton_list, event_xsec, event_weight, outfile_test_weights);
+    //Test_PrintFinalPartons(parton_list, event_xsec, event_weight, outfile_test_FinalPartons);
+    //Test_EnergyMomentumConservation(parton_list);
+    //Test_PrintLundPlane_history(parton_list, event_xsec, event_weight, outfile_test_LundPlane);
+
+    //HepMC3 ASCII writer
+    //write_HepMC3_event(parton_list, event_xsec, event_weight, outfile_test_HepMC3, iEv);
 
   }
-  cout << "End Program" << endl;
+  cout << "#End Program" << endl;
 
   //Closing outfiles
   outfile_test_weights.close();
@@ -54,6 +61,4 @@ int main(int argc, char **argv) {
   outfile_test_LundPlane.close();
 
   return 0;
-
-// End program
-}
+} // End program

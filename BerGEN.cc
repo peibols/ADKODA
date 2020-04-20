@@ -22,15 +22,16 @@ void BerGEN::next() {
 
   shower->init(*inpartons);
   event_weight = shower->get_event_weight();
+  event_xsec = shower->get_event_xsec();
   shower->run();
   parton_list = shower->get_parton_list();
   //shower->print();
 
 }
 
-void BerGEN::print() {
-  std::cout << "Event weight: " << event_weight << std::endl;
-  std::cout << "ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t m" << std::endl;
+void BerGEN::print() { //FIXME call this from Shower as a friend
+  std::cout << "#Event weight: " << event_weight << std::endl;
+  std::cout << "#ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t m\t pt2\t x\t y\t z\t t" << std::endl;
   for (int ip=0; ip<parton_list.size(); ip++) {
     std::cout << ip << "\t ";
     parton_list[ip].display();

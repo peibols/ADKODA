@@ -30,16 +30,14 @@ std::vector<Parton> InPartons::PartonList() {
   hard_parton_system.set_mass(ecms);
   hard_list.push_back(hard_parton_system);
 
-  if (DATA.parton_gun == 1) { // Back-to-back di-parton gun
-    double px = DATA.pt_max/2.;
-    double py = 0.;
-    double pz = 0.;
-    double en = px; // FIXME Assumed massless partons for now.
+  if (DATA.parton_gun == 1) { // Back-to-back di-parton gun random angle in the transverse plane
 
     event_weight = 1.;
+    event_xsec   = 1.;
 
-    p1.Set( en, py, pz, en );
-    p2.Set( -en, -py, -pz, en );
+    double phi = 2.*M_PI*dis(gen);
+    p1.Set(std::cos(phi)*ecms/2., std::sin(phi)*ecms/2., 0., ecms/2.);
+    p2.Set(-p1.x(), -p1.y(), -p1.z(), p1.t());
 
     // Assign id and color for the hard scattering.
     if (DATA.hard_partons == 0) { // gg
@@ -58,14 +56,25 @@ std::vector<Parton> InPartons::PartonList() {
       id1=dis_int(gen), id2=21;
     }
     else std::cout << "ERROR: hard_partons = 0-2" << std::endl;
+
+    Parton hard_parton_a( Parton(id1,-12,p1,x) ); //stat:12 incoming beam
+    Parton hard_parton_b( Parton(id2,-12,p2,x) );
+    hard_parton_a.set_d1(3); //FIXME I set it by hand.
+    hard_parton_b.set_d1(3);
+    hard_list.push_back(hard_parton_a);
+    hard_list.push_back(hard_parton_b);
+    Parton hard_parton_c( Parton(90,-22,p1+p1,x) ); //id:0 (System), stat:22 intermediate
+    hard_parton_c.set_mass(ecms);
+    hard_parton_c.set_mom1(1); //FIXME set it automatically
+    hard_parton_c.set_mom2(2);
+    hard_parton_c.set_d1(4);
+    hard_parton_c.set_d2(5);
+    hard_list.push_back(hard_parton_c);
   }
   else if (DATA.parton_gun == 0) { // LO: e-e+ --> jj
-    double ecms = 91.188;
     double ct = 2.*dis(gen)-1.;
-    //double ct = 2.*0.5-1.; //FIXME!!!
     double st = std::sqrt(1.-ct*ct);
     double phi = 2.*M_PI*dis(gen);
-    //double phi = 2.*M_PI*0.5; //FIXME!!!
     p1.Set( st*std::cos(phi)*ecms/2., st*std::sin(phi)*ecms/2., ct*ecms/2., ecms/2. );
     p2.Set( -p1.x(), -p1.y(), -p1.z(), p1.t() );
     FourVector pa ( 0., 0., ecms/2., ecms/2. );
@@ -73,12 +82,12 @@ std::vector<Parton> InPartons::PartonList() {
     cols1[0]=101, cols1[1]=0;
     cols2[0]=0,   cols2[1]=101;
     id1=dis_int(gen), id2=-id1;
-    //id1=1, id2=-id1; //FIXME!!!
     double s = (pa+pb)*(pa+pb);
     double t = (pa-p1)*(pa-p1);
     double lome = ME2(id1, s, t);
-    double dxs = 5.*lome*3.89379656e8/(8.*M_PI)/(2.*std::pow(ecms, 2.));
-    event_weight = dxs;
+    double dxs  = 5.*lome*3.89379656e8/(8.*M_PI)/(2.*std::pow(ecms, 2.)); //xsec is in pb
+    event_xsec   = dxs;
+    event_weight = 1.;
 
     Parton hard_parton_a( Parton(-11,-12,pa,x) ); //id:11 (e), stat:12 incoming beam
     Parton hard_parton_b( Parton(11,-12,pb,x) );
@@ -87,7 +96,7 @@ std::vector<Parton> InPartons::PartonList() {
     hard_list.push_back(hard_parton_a);
     hard_list.push_back(hard_parton_b);
     Parton hard_parton_c( Parton(23,-22,pa+pb,x) ); //id:22 (Z0), stat:22 intermediate
-    hard_parton_c.set_mass(91.188);
+    hard_parton_c.set_mass(91.1876);
     hard_parton_c.set_mom1(1); //FIXME set it automatically
     hard_parton_c.set_mom2(2);
     hard_parton_c.set_d1(4);
@@ -105,6 +114,8 @@ std::vector<Parton> InPartons::PartonList() {
   hard_parton2.set_mom1(hard_list.size()-1);
   hard_parton1.set_cols(cols1);
   hard_parton2.set_cols(cols2);
+  hard_parton1.set_scale(ecms);
+  hard_parton2.set_scale(ecms);
 
   hard_list.push_back(hard_parton1);
   hard_list.push_back(hard_parton2);

@@ -41,6 +41,7 @@
 
 namespace Util {
 
+  double Delta(FourVector v1, FourVector v2);
   double m(const FourVector& v1, const FourVector& v2);
   double m2(const FourVector& v1, const FourVector& v2);
   FourVector Cross(const FourVector& v1, const FourVector& v2);

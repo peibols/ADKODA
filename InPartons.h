@@ -17,6 +17,7 @@ class InPartons {
     ~InPartons() {}
 
    double event_weight;
+   double event_xsec;
    std::vector<Parton> PartonList();
    double ME2(int id, double s, double t);
 
