@@ -17,6 +17,7 @@ bool Shower::evolve() {
   for (unsigned int iSplit=0; iSplit<parton_list.size(); iSplit++) { // Praticle list scan
     Parton p_split = parton_list[iSplit];
     if (p_split.stat()<0) continue; // Skip if inactive parton
+    if (p_split.is_frozen()) continue; // Skip if frozen parton
     for (unsigned int iSpect=0; iSpect<parton_list.size(); iSpect++) { // Find dipole
       if (iSplit == iSpect) continue;
       Parton p_spect = parton_list[iSpect];
@@ -45,11 +46,15 @@ bool Shower::evolve() {
       } // End Kernel loop
     } // End recoiler loop
   } // End parton_list loop
-  t_max = t;
+
+  //t_max = t; // Don't update scale here, emission could be vetoed!
+
   // Terminate shower if no winner found
   if (t <= t_min) return 0;
+
   // Generate final z value
   double z = kernels[wKernel]->GenerateZ(1.-wzp, wzp, dis(gen));
+
   // Compute virtuality
   double Q2 = 0.;
   if      (DATA.evol_scale == 0) Q2 = t / z / ( 1.0 - z );
@@ -68,13 +73,16 @@ bool Shower::evolve() {
     double g = max_alpha_s * kernels[wKernel]->Estimate(z);
     if (pt2ev < 1.) std::cout << "ptev < ptmin" << std::endl;
     if (DATA.shower_kernel==0) { // If does not succeed, have a next try
-      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0) { return 1; }  //veto, scale in between the min/max scale, physical pt.
+      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0) { t_max = t; return 1; }  //veto, scale in between the min/max scale, physical pt.
     } else if (DATA.shower_kernel==1) {
-      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min) { return 1; } //FIXME missing constraint?
+      if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min) { t_max = t; return 1; } //FIXME missing constraint?
     } else std::cout << "ERROR: shower_kernel = 0,1" << std::endl;
 
+
     // If success, set new kinematics of system
-    Update(wSplit, wSpect, wKernel, wmar2, z, y, Q2);
+    bool should_freeze;
+    should_freeze = Update(wSplit, wSpect, wKernel, wmar2, z, y, Q2);
+    if (should_freeze) { parton_list[wSplit].set_is_frozen(1); t_max=t; return 1; }
 
 
     //TEST MODULE: print all (z,t)
@@ -105,7 +113,7 @@ bool Shower::evolve() {
   return 1;
 }
 
-void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 ) {
+bool Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 ) {
 
   FourVector pSplit = parton_list[ Split ].p();
   FourVector pSpect = parton_list[ Spect ].p();
@@ -172,6 +180,23 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
     xr.Set(pSpect.x()*tf/pSpect_abs, pSpect.y()*tf/pSpect_abs, pSpect.z()*tf/pSpect_abs, tf);
   }
 
+  // Check if emission should be vetoed
+  double veto_tf    = xa.t();
+  double accum_tf   = (xa+parton_list[Split].x()).t();
+  double tf_med     = std::sqrt(2.*fmin(pDau1.t(),pDau2.t())/qhat);
+  std::cout << " veto_tf= " << veto_tf << " tf_med= " << tf_med << " accum_tf= " << accum_tf << std::endl;
+  //if (veto_tf > tf_med) {
+  if (accum_tf > tf_med) {
+    //if (tf_med < L_med) { 
+    if (parton_list[Split].x().t() + tf_med < L_med) {
+      std::cout << "Freezing \n";
+      return 1;
+    }
+    else {
+      std::cout << "Outside medium!" << std::endl;
+    }
+  }
+
   // Make colours of daughters
   int col1[2] = {0};
   int col2[2] = {0};
@@ -198,7 +223,8 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   recoiler.reset_momentum(UpSpect);
   recoiler.set_mom1(Spect), recoiler.set_mom2(Spect);
   recoiler.set_stat(52);
-  recoiler.set_x(xr+parton_list[Spect].x());
+  //recoiler.set_x(xr+parton_list[Spect].x());
+  recoiler.set_x(parton_list[Spect].x()); //Don't advance x_mu of recoiler
   parton_list.push_back(recoiler);
   int Rec = int(parton_list.size()) - 1;
 
@@ -209,6 +235,8 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   parton_list[Split].set_d2(Dau2);
   parton_list[Spect].set_d1(Rec);
   parton_list[Spect].set_d2(Rec);
+
+  return 0;
 }
 
 void Shower::MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]){

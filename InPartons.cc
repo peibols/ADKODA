@@ -36,6 +36,7 @@ std::vector<Parton> InPartons::PartonList() {
     event_xsec   = 1.;
 
     double phi = 2.*M_PI*dis(gen);
+    phi = 0.;
     p1.Set(std::cos(phi)*ecms/2., std::sin(phi)*ecms/2., 0., ecms/2.);
     p2.Set(-p1.x(), -p1.y(), -p1.z(), p1.t());
 

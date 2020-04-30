@@ -36,14 +36,14 @@ int main(int argc, char **argv) {
   bergen.init();
   for (int iEv = 0; iEv < nEv; iEv++) {
 
-    if (iEv % 1000 == 0) cout << "#Event: " <<  iEv << endl;
+    if (iEv % 1 == 0) cout << "\n #Event: " <<  iEv << endl;
     bergen.next();
-    //bergen.print();
+    bergen.print();
 
     //Test modules
     //double event_weight = bergen.get_event_weight();
     //double event_xsec   = bergen.get_event_xsec();
-    //std::vector<Parton> parton_list = bergen.get_parton_list();
+    std::vector<Parton> parton_list = bergen.get_parton_list();
     //Test_Weights(parton_list, event_xsec, event_weight, outfile_test_weights);
     //Test_PrintFinalPartons(parton_list, event_xsec, event_weight, outfile_test_FinalPartons);
     //Test_EnergyMomentumConservation(parton_list);
@@ -51,6 +51,13 @@ int main(int argc, char **argv) {
 
     //HepMC3 ASCII writer
     //write_HepMC3_event(parton_list, event_xsec, event_weight, outfile_test_HepMC3, iEv);
+
+    // Freezing time hist
+    for (unsigned int i=0; i<parton_list.size(); i++) {
+      double time = parton_list[i].x().t();
+      double en = parton_list[i].e();
+      //std::cout << " en= " << en << " time= " << time << std::endl;
+    }
 
   }
   cout << "#End Program" << endl;

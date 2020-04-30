@@ -14,6 +14,7 @@ void BerGEN::init() {
 
   inpartons = new InPartons(DATA);
   shower    = new Shower(DATA);
+  cascade   = new Cascade(DATA);
 
   return;
 }
@@ -25,6 +26,9 @@ void BerGEN::next() {
   event_xsec = shower->get_event_xsec();
   shower->run();
   parton_list = shower->get_parton_list();
+  cascade->init(parton_list);
+  cascade->run();
+  parton_list = cascade->get_parton_list();
   //shower->print();
 
 }

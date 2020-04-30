@@ -81,6 +81,17 @@ class Pgq_CS : public Kernel {//g --> q + qbar
     double GenerateZ (double zm, double zp, double R) {return zm + (zp-zm) * R;}
 };
 
+//Medium cascade Splitting Functions
+class Kgg : public Kernel {//g --> g + g
+  public:
+    using Kernel::Kernel;
+    double Value (double z, double y) {return 0.5 * CA * std::pow(1.+z*(z-1.),2.) * std::sqrt(CA*(z/(1.-z)+1./z)) /z /(1.-z);}
+    double Estimate (double z) {return 0.5 * std::pow(CA /z /(1.-z),3./2.);}
+    double Integral (double zm, double zp) {return CA * (1.-2.*zm) * std::sqrt(CA/(zm-zm*zm)) + CA * (2.*zp-1.) * std::sqrt(CA/(zp-zp*zp));}
+    double GenerateZ (double zm, double zp, double R) {return std::pow(-2.*R*zm+R+zm,2.)/(zm+R*(2.*zm-1.)*(2.*(R-1.)*zm-R));}
+};
+
+
 } // end namespace Adkoda
 
 #endif // Kernel_H

@@ -2,6 +2,7 @@
 #define BerGEN_H
 
 #include "Shower.h"
+#include "Cascade.h"
 #include "InPartons.h"
 #include "data.h"
 
@@ -12,6 +13,7 @@ class BerGEN {
   private:
 
     Shower    *shower    =	nullptr;
+    Cascade   *cascade   =	nullptr;
     InPartons *inpartons = 	nullptr;
     InitData  DATA;
 

@@ -23,6 +23,10 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x) {
   _mom2=0;
   _mass=0.; //FIXME Assume all partons massless for the moment
   _scale=0.; //Scale pt [GeV] in which was produced
+
+  _xfrac=1.; //Energy fraction wrt cascade initiator
+
+  _is_frozen=0;
 }
 
 void Parton::display() {
@@ -33,8 +37,8 @@ void Parton::display() {
 	<< _col << "\t " << _acol << "\t "
 	<< p().x() << "\t " << p().y() << "\t " << p().z() << "\t " << p().t() << "\t "
 	<< _mass << "\t "
-  //<< _scale << "\t "
-  //<< x().x() << "\t " << x().y() << "\t " << x().z() << "\t " << x().t()
+  << _scale << "\t "
+  << x().x() << "\t " << x().y() << "\t " << x().z() << "\t " << x().t()
   << endl;
 }
 
@@ -58,7 +62,7 @@ FourVector Parton::p() {
 }
 
 void Parton::set_x(const FourVector& x) { _x=x; } //Creation point in the lab frame
-const FourVector Parton::x() { return _x; }
+FourVector Parton::x() { return _x; }
 
 void Parton::set_d1(int d1) { _d1=d1; }
 int Parton::d1(){ return _d1; }

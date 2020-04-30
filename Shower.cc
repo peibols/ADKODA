@@ -42,6 +42,11 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
   max_alpha_s = alpha_s( pt_min * pt_min );
   //std::cout << " max_alpha_s= " << max_alpha_s << std::endl;
 
+  // Medium parameters
+  alphas_med = 0.3;
+  L_med = 5./0.1973; // in GeV^-1
+  qhat= 1.5 * 0.1973; // in GeV^3
+
   //std::cout << "Shower CONSTRUCTED" << std::endl;
 
 }
@@ -85,13 +90,15 @@ void Shower::init ( InPartons inpartons) {
 
 void Shower::run () {
 
-  //std::cout << "Initial Parton List size = " << parton_list.size() << endl;
-  //std::cout << "Shower RUNNING" << std::endl;
+  std::cout << "Initial Parton List size = " << parton_list.size() << endl;
+  std::cout << "Shower RUNNING" << std::endl;
+
+  // Vacuum Shower
   bool do_evolve = 1;
   while (do_evolve) do_evolve = evolve(); // FIXME how does this evolve() called?!
 
-  //std::cout << "Shower FINISHED" << std::endl;
-  //std::cout << "Final Parton List size = " << parton_list.size() << endl;
+  std::cout << "Shower FINISHED" << std::endl;
+  std::cout << "Final Parton List size = " << parton_list.size() << endl;
 
 }
 
@@ -179,8 +186,6 @@ double Shower::alpha_s( double t ) {
   return alpha;
 }
 */
-
-
 
 void Shower::print() {
   std::cout << "#Event weight: " << event_weight << std::endl;
