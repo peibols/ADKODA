@@ -36,7 +36,7 @@ std::vector<Parton> InPartons::PartonList() {
     event_xsec   = 1.;
 
     double phi = 2.*M_PI*dis(gen);
-    phi = 0.;
+    phi = 0.;	// Angle fixed for TESTING
     p1.Set(std::cos(phi)*ecms/2., std::sin(phi)*ecms/2., 0., ecms/2.);
     p2.Set(-p1.x(), -p1.y(), -p1.z(), p1.t());
 
@@ -63,7 +63,7 @@ std::vector<Parton> InPartons::PartonList() {
     hard_parton_a.set_d1(3); //FIXME I set it by hand.
     hard_parton_b.set_d1(3);
     hard_list.push_back(hard_parton_a);
-    hard_list.push_back(hard_parton_b);
+    hard_list.push_back(hard_parton_b); 
     Parton hard_parton_c( Parton(90,-22,p1+p1,x) ); //id:0 (System), stat:22 intermediate
     hard_parton_c.set_mass(ecms);
     hard_parton_c.set_mom1(1); //FIXME set it automatically
@@ -119,7 +119,7 @@ std::vector<Parton> InPartons::PartonList() {
   hard_parton2.set_scale(ecms);
 
   hard_list.push_back(hard_parton1);
-  hard_list.push_back(hard_parton2);
+  //hard_list.push_back(hard_parton2); // Just one parton for TESTING
 
   return hard_list;
 }

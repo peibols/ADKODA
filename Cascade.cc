@@ -26,11 +26,13 @@ Cascade::Cascade(const InitData &DATA_in) : DATA(DATA_in) {
 */
 
   // Medium parameters
-  alphas_med = 0.3;
-  L_med = 4./0.1973; // in GeV^-1
-  qhat= 1.5 * 0.1973; // in GeV^3
-  eps_med = 0.01;
-  med_cutoff = 1.25; // in GeV
+  alphas_med = DATA.alphas_med;
+  L_med = DATA.L_med/0.1973; // in GeV^-1
+  qhat= DATA.qhat*0.1973; // in GeV^3
+  eps_med = DATA.eps_med;
+  xmin_med = DATA.xmin_med;
+
+  qmin = 0.2;
 
   //std::cout << "Cascade CONSTRUCTED" << std::endl;
 
@@ -63,6 +65,15 @@ void Cascade::run () {
 
     if (abs(p.id())<=6) continue; // Ignore quarks for now
 
+    //std::cout << "Ini E= " << pIni.t() << " id= " << p.id() << std::endl;
+    
+    double curr_pos = p.x().p3abs() / 0.1973; // in GeV^-1
+    //std::cout << " curr_pos= " << curr_pos << " L_med= " << L_med << std::endl;
+    if (curr_pos > L_med) {
+      std::cout << "Out of medium. " << std::endl;
+      continue; // Static QGP Sphere
+    }	
+    
     int last_part = parton_list.size()-1;
 
     // Align with z
@@ -75,28 +86,11 @@ void Cascade::run () {
 
     pplus = pIni.t();
 
-    //std::cout << "Ini E= " << pIni.t() << " id= " << p.id() << std::endl;
-
-    for (unsigned int j=0; j<cascade_list.size(); j++) {
-
-      Parton q = cascade_list[j];
- 
-      if (q.stat()<0) continue;
-
-      double curr_pos = q.x().p3abs() / 0.1973; // in GeV^-1
-      //std::cout << " curr_pos= " << curr_pos << " L_med= " << L_med << std::endl;
-      if (curr_pos > L_med) {
-        std::cout << "Out of medium. " << std::endl;
-        continue; // Static QGP Sphere
-      }	
-
-      double curr_time = tau(q.x().t());
-      double start_time = curr_time;
-      //std::cout << " Start tau= " << start_time << " t_kin= " << q.x().t() << std::endl;
-      bool do_evolve=1;
-      while (do_evolve) do_evolve = evolve(start_time, q, cascade_list, j);
-    
-    }
+    double curr_time = tau(p.x().t());
+    double start_time = curr_time;
+    //std::cout << " Start tau= " << start_time << " t_kin= " << q.x().t() << std::endl;
+    bool do_evolve=1;
+    while (do_evolve) do_evolve = evolve(start_time, cascade_list);
 
     // Update full parton list
     //std::cout << " i= " << i << " last_part= " << last_part << std::endl;

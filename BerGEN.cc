@@ -24,7 +24,7 @@ void BerGEN::next() {
   shower->init(*inpartons);
   event_weight = shower->get_event_weight();
   event_xsec = shower->get_event_xsec();
-  shower->run();
+  //shower->run();
   parton_list = shower->get_parton_list();
   cascade->init(parton_list);
   cascade->run();
@@ -91,6 +91,36 @@ InitData BerGEN::read_in_parameters(std::string input_file) {
   if (tempinput != "empty") std::istringstream(tempinput) >> temp_shower_kernel;
   parameter_list.shower_kernel = temp_shower_kernel;
 
+  // alphas med
+  double temp_alphas_med = 0.3;
+  tempinput = Util::StringFind4(input_file, "alphas_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_alphas_med;
+  parameter_list.alphas_med = temp_alphas_med;
+  
+  // alphas med
+  double temp_L_med = 4.; // in fm
+  tempinput = Util::StringFind4(input_file, "L_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_L_med;
+  parameter_list.L_med = temp_L_med;
+  
+  // eps med
+  double temp_eps_med = 0.01;
+  tempinput = Util::StringFind4(input_file, "eps_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_eps_med;
+  parameter_list.eps_med = temp_eps_med;
+
+  // xmin med
+  double temp_xmin_med = 0.01;
+  tempinput = Util::StringFind4(input_file, "xmin_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_xmin_med;
+  parameter_list.xmin_med = temp_xmin_med;
+  
+  // qhat
+  double temp_qhat = 1.5; // in GeV^2/fm
+  tempinput = Util::StringFind4(input_file, "qhat");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_qhat;
+  parameter_list.qhat = temp_qhat;
+  
   return parameter_list;
 
 }

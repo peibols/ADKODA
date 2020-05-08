@@ -43,9 +43,9 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
   //std::cout << " max_alpha_s= " << max_alpha_s << std::endl;
 
   // Medium parameters
-  alphas_med = 0.3;
-  L_med = 5./0.1973; // in GeV^-1
-  qhat= 1.5 * 0.1973; // in GeV^3
+  alphas_med = DATA.alphas_med;
+  L_med = DATA.L_med/0.1973; // in GeV^-1
+  qhat= DATA.qhat * 0.1973; // in GeV^3
 
   //std::cout << "Shower CONSTRUCTED" << std::endl;
 

@@ -128,6 +128,9 @@ class Parton : protected fjcore::PseudoJet
 
     void set_x(const FourVector& x); //Creation point in the lab frame
     FourVector x();
+    
+    void set_xf(const FourVector& xf); //Destruction point in the lab frame
+    FourVector xf();
 
     bool ColourConnected(Parton& p);
 
@@ -141,6 +144,7 @@ class Parton : protected fjcore::PseudoJet
   private:
 
     FourVector _x;
+    FourVector _xf;
     bool _is_frozen;
     int _col, _acol;
     int _id;

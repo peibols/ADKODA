@@ -21,7 +21,10 @@ class Cascade {
 
     void run();
 
-    bool evolve(double &start_time, Parton p, std::vector<Parton> &cascade_list, int mom);
+    bool evolve(double &start_time, std::vector<Parton> &cascade_list);
+
+    double BroadInt();
+    double GenerateQ(double R);
 
     double tau(double t /*in fm*/);
     double tkin(double tau /*dim less*/); 
@@ -41,7 +44,9 @@ class Cascade {
     double alphas_med;
     double qhat;
     double eps_med;    
-    double med_cutoff;
+    double xmin_med;
+
+    double qmin;
 
     // Updated by each shower initiator
     double pplus;

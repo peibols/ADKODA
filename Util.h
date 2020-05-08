@@ -10,7 +10,7 @@
 #endif
 
 #ifndef CA
-#define CA (NC)
+#define CA (1.0)
 #endif
 
 #ifndef CF

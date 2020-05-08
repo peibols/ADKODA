@@ -14,6 +14,7 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x) {
   _stat=stat;
   reset_momentum (p);
   _x=x; //Creation point in the lab frame
+  _xf.Set(-1000,-1000,-1000.,-1000);
   _col=0;
   _acol=0;
 
@@ -38,7 +39,8 @@ void Parton::display() {
 	<< p().x() << "\t " << p().y() << "\t " << p().z() << "\t " << p().t() << "\t "
 	<< _mass << "\t "
   << _scale << "\t "
-  << x().x() << "\t " << x().y() << "\t " << x().z() << "\t " << x().t()
+  << x().x() << "\t " << x().y() << "\t " << x().z() << "\t " << x().t() << "\t"
+  << xf().x() << "\t " << xf().y() << "\t " << xf().z() << "\t " << xf().t()
   << endl;
 }
 
@@ -63,6 +65,9 @@ FourVector Parton::p() {
 
 void Parton::set_x(const FourVector& x) { _x=x; } //Creation point in the lab frame
 FourVector Parton::x() { return _x; }
+
+void Parton::set_xf(const FourVector& xf) { _xf=xf; } //Creation point in the lab frame
+FourVector Parton::xf() { return _xf; }
 
 void Parton::set_d1(int d1) { _d1=d1; }
 int Parton::d1(){ return _d1; }
