@@ -48,7 +48,7 @@ std::vector<Parton> InPartons::PartonList() {
     else if (DATA.hard_partons == 1) { // qqbar
       cols1[0]=101, cols1[1]=0;
       cols2[0]=0, cols2[1]=101;
-      id1=dis_int(gen), id2=id1;
+      id1=dis_int(gen), id2=-id1;
     }
     else if (DATA.hard_partons == 2) { //nonphysical
       cols1[0]=101, cols1[1]=0;

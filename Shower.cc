@@ -50,25 +50,26 @@ void Shower::init ( InPartons inpartons) {
 
   parton_list  = inpartons.PartonList();
   event_weight = inpartons.event_weight;
-  event_xsec = inpartons.event_xsec;
+  event_xsec   = inpartons.event_xsec;
 
   // Fix minimum and maximum scale
-  double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;
+  double ecms2 = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());
   if      (DATA.evol_scale==0) {              // pt ordering
     t_min = std::pow(DATA.pt_min, 2.);
-    t_max = std::min(std::pow(DATA.pt_max, 2.), ecms);
+    t_max = std::min(std::pow(DATA.pt_max, 2.), ecms2/4.);
   }
   else if (DATA.evol_scale==1) {              // m ordering
     t_min = std::pow(DATA.pt_min, 2.) * 4.;
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms);
+    t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms2);
   }
-  else if (DATA.evol_scale==2) {              // tf ordering
-    t_min = std::pow(DATA.pt_min, 2.) * 2. / (DATA.pt_max/2.);
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (DATA.pt_max/2.), ecms/2./(DATA.pt_max/2.));
+  else if (DATA.evol_scale==2) {              // tf-1 ordering
+    t_min = std::pow(DATA.pt_min, 2.) * 2. / (std::sqrt(ecms2)/2.);
+    t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (std::sqrt(ecms2)/2.), ecms2 /(2.*std::sqrt(ecms2)/2.));
   }
   else if (DATA.evol_scale==3) {              // qt ordering
     t_min = std::pow(DATA.pt_min, 2.) * 16.;
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4.*ecms);
+    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4. * ecms2);
+    t_max = std::pow(ecms2/DATA.pt_min, 2.);
   }
 
   // Update max_color index

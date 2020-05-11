@@ -31,7 +31,7 @@ class Shower {
     double alpha_s0( double t );
     double alpha_s( double t );
 
-    void Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 );
+    void Update( int Split, int Spect, int Kernel, double mar2, double z, double Q2 );
 
     void MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]);
 

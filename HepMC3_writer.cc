@@ -15,8 +15,6 @@ using namespace HepMC3;
 namespace Adkoda {
 
 void write_HepMC3_event(std::vector<Parton> parton_list, double event_xsec, double event_weight, HepMC3::WriterAscii &outfile, int iEv) {
-
-
   //Fill particles
   std::vector<GenParticlePtr> GenVector;
   GenVector.reserve( parton_list.size() );
