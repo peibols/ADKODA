@@ -102,6 +102,9 @@ class FourVector
       return phi;
     };
 
+    double pt() { return sqrt(xv*xv + yv*yv); };
+    double pt2() { return this->pt()*this->pt(); };
+
     double m() { return sqrt(tv*tv - xv*xv - yv*yv - zv*zv); };
     double m2() { return this->m()*this->m(); };
 

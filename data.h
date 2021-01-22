@@ -14,6 +14,11 @@ typedef struct init_data {
   double pt_max; //COM energy
   double pt_min; //Minimal scale in shower
 
+  int medium;
+  double qhat0;
+  double L0;
+  double T0;
+
 } InitData;
 
 #endif  //  DATA_H

@@ -28,8 +28,8 @@ bool Shower::evolve() {
         double mar2 = m2(p_split.p(), p_spect.p());
         if (mar2 < 4.*pt_min*pt_min) continue; // Skip if dipole has no enough phase-space
 	      // Overshoot z
-        double eps = pt_min*pt_min / mar2/4.; //This overshoots all ordering (except AO).
-        if (DATA.evol_scale == 3) eps = std::pow(pt_min,3.)/std::pow(mar2,2.);
+        //double eps = pt_min*pt_min / mar2;
+        double eps = pt_min*pt_min / DATA.pt_max/DATA.pt_max;
         double zp = 0.5 * (1. + std::sqrt(1. - 4.*eps));
 	      // Generate overshooted scale
         double g  = max_alpha_s / (2.*M_PI) * kernels[iKernel]->Integral(1.-zp, zp);
@@ -56,7 +56,7 @@ bool Shower::evolve() {
   else if (DATA.evol_scale == 1) Q2 = t;
   else if (DATA.evol_scale == 2) {
     if      (DATA.shower_kernel == 0) Q2 = t * 2. * std::sqrt(wmar2)/2.;
-    else if (DATA.shower_kernel == 1) Q2 = t * 2. * parton_list[wSplit].p().plus();
+    else if (DATA.shower_kernel == 1) Q2 = t * 2. * parton_list[wSplit].p().t(); //FIXME i used energy here, to have more consistency btw AP and CS.
   }
   else if (DATA.evol_scale == 3) Q2 = t * z * (1.-z);
   else std::cout << "ERROR: evol_scale = 0-3" << std::endl;
@@ -64,44 +64,78 @@ bool Shower::evolve() {
   double pt2ev = Q2 * z * (1.-z);
   double y = 0.;
   if (DATA.shower_kernel==1) y = Q2/wmar2;
+
+  //Stop before medium
+  double k2br = 0., k2c = 0., k2T = 0.;
+  if (DATA.medium == 1) {
+    if      (DATA.shower_kernel == 0) {
+      k2br = std::sqrt(2./3.*z*(1.-z)*std::sqrt(wmar2)/2.*DATA.qhat0);
+      k2c  = std::pow(z*(1.-z)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*std::sqrt(wmar2)/2., 2.);
+    } else if (DATA.shower_kernel == 1) {
+      k2br = std::sqrt(2./3.*z*(1.-z)*parton_list[wSplit].p().t()*DATA.qhat0);
+      k2c  = std::pow(z*(1.-z)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*parton_list[wSplit].p().t(), 2.);
+    }
+    k2T = std::sqrt(2./3.*DATA.qhat0*DATA.T0);
+    if (k2T < 0.22*0.22) { std::cout << "ERROR in Evolution.c: T0 is too small." << std::endl; std::exit(0);}
+    if (k2T < DATA.pt_min*DATA.pt_min) { std::cout << "ERROR in Evolution.c: ptmin > thermal scale." << std::endl; std::exit(0); }
+    if (pt2ev < k2br || pt2ev < k2c || pt2ev < k2T) return 1;
+  }
+
+
   // Accept / Reject veto procedure
-  double f = (1.-y) * alpha_s(pt2ev) * kernels[wKernel]->Value(z, y);
+  double f = (1.-y) * alpha_s(pt2ev) * kernels[wKernel]->Value(z, y); //1-y is necessary phase space factor in CS. It also makes the LL comparison impossible.
   double g = max_alpha_s * kernels[wKernel]->Estimate(z);
   if (DATA.shower_kernel==0) { // If does not succeed, have a next try
     double pt2_daug = Q2 * ( z * (1.-z) * std::pow(wmar2 + Q2, 2.) - wmar2 * Q2 ) / std::pow( wmar2 - Q2, 2.);
-    if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0) { return 1; }  //veto, scale in between the min/max scale, physical pt.
+    if (f/g < dis(gen) || Q2 > wmar2 || pt2ev > DATA.pt_max*DATA.pt_max || pt2ev < pt_min*pt_min || pt2_daug < 0.0) { return 1; }  //veto, scale in between the min/max scale, physical pt.
   }
   else if (DATA.shower_kernel==1) {
-    if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min) { return 1; }
+    if (f/g < dis(gen) || Q2 > wmar2 || pt2ev > DATA.pt_max*DATA.pt_max || pt2ev < pt_min*pt_min) { return 1; }
   } else std::cout << "ERROR: shower_kernel = 0,1" << std::endl;
 
   // If success, set new kinematics of system
   Update(wSplit, wSpect, wKernel, wmar2, z, Q2);
 
+
+/*
   //TEST MODULE: print all (z,t)
   std::ofstream outfile_test;
   if (!outfile_test.is_open()) outfile_test.open("test/test_veto.out", std::ios_base::app);
   double qt2   = Q2/z/(1.-z);
   double en    = 0;
   if      (DATA.shower_kernel == 0) en = std::sqrt(wmar2)/2.;
-  else if (DATA.shower_kernel == 1) en = parton_list[wSplit].p().plus();
+  else if (DATA.shower_kernel == 1) en = parton_list[wSplit].p().t();
   double theta = std::sqrt(qt2)/en;
   double tf    = 2.*en/Q2;
+  double qhat=0.3;
+  double L=4./0.197;
+  int in = 0;
+  if (z*(1.-z) >= 4./L/L/Q2 && z*(1.-z) >= 2.*qhat*en/3./Q2/Q2 && Q2 >= 2.*en/L) in = 1;
   outfile_test << qt2 << " " << z << " " << en << " " << pt2ev << " " <<
-                  theta << " " << Q2 << " " << tf << " " << 1. << std::endl;
-/*
-    //TEST MODULE: stop at the first branch and print veto variables and kinematics
-    std::ofstream outfile_test_veto;
-    if (!outfile_test_veto.is_open()) outfile_test_veto.open("test/test_veto.out", std::ios_base::app);
-    std::ofstream outfile_kinem;
-    if (!outfile_kinem.is_open()) outfile_kinem.open("test/test_kinematics.out", std::ios_base::app);
-    if (paron_list[wSplit]stat() == 23) {
-      outfile_test_veto << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << " " << y << std::endl;
+                  theta << " " << Q2 << " " << tf << " " << in << std::endl;
 
-      outfile_kinem << parton_list[parton_list[wSplit].d2()].e()  << " " << parton_list[parton_list[wSplit].d2()].px() << " " <<
-                       parton_list[parton_list[wSplit].d2()].py() << " " << parton_list[parton_list[wSplit].d2()].pz() << " " << std::endl;
-      return 0;
-    }
+  return 0; //Terminate shower after the first splititng
+
+*/
+
+
+  //TEST MODULE: stop at the first branch and print veto variables and kinematics
+  std::ofstream outfile_test_veto;
+  if (!outfile_test_veto.is_open()) outfile_test_veto.open("test/test_veto.out", std::ios_base::app);
+  if (counter==1) {
+    outfile_test_veto << z << " " << Q2 << " " << pt2ev << " " << Q2/z/(1.-z) << " " << Q2/2./(std::sqrt(wmar2)/2.) << " " << wmar2 << " " << y << std::endl;
+  }
+  counter++;
+  if (counter==2) return 0;
+  //return 0; //Terminate the shower after the first splitting
+/*
+  std::ofstream outfile_kinem;
+  if (!outfile_kinem.is_open()) outfile_kinem.open("test/test_kinematics.out", std::ios_base::app);
+  if (parton_list[wSplit].stat() == 23) {
+    outfile_kinem << parton_list[parton_list[wSplit].d2()].e()  << " " << parton_list[parton_list[wSplit].d2()].px() << " " <<
+                     parton_list[parton_list[wSplit].d2()].py() << " " << parton_list[parton_list[wSplit].d2()].pz() << " " << std::endl;
+    return 0;
+  }
 */
   return 1;
 }
@@ -157,7 +191,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   else if(DATA.shower_kernel==1) {
     double y = Q2/mar2;
     double rkt = std::sqrt(mar2*y*z*(1.-z));
-    FourVector kt1    = Cross(pSplit, pSpect);
+    FourVector kt1 = Cross(pSplit, pSpect);
     if (kt1.p3abs() < 1.e-8) kt1 = Cross(pSplit, FourVector(1.,0.,0.,0.)); //FIXME works only if py != 0.
     kt1    *= rkt*std::cos(pt_angle)/kt1.p3abs();
     FourVector kt2cms = Cross(BoostForCS(pSplit+pSpect, pSplit), kt1);
@@ -168,7 +202,8 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
     UpSpect = pSpect*(1.-y); //pk
 
     // Creation points in the lab frame
-    double tf = 2. * pSplit.plus() / Q2; //TODO use masses
+    double tf = 2. * pSplit.t() / Q2; //TODO use masses
+    //double tf = 2. * pSplit.plus() / Q2; //FIXME on could use this
     //double tf = 2. * (pDau1.plus() + pDau2.plus()) / Q2; //FIXME one could use this
     double pSplit_abs = pSplit.p3abs();
     double pSpect_abs = pSpect.p3abs();
@@ -184,8 +219,10 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   MakeColours( Split, Spect, dau1_id, col1, col2 );
 
   // Add daughters to parton list
-  Parton daughter1(Parton(dau1_id, 51, pDau1, xa+parton_list[Split].x())); //Status: 51, active shower particles
-  Parton daughter2(Parton(dau2_id, 51, pDau2, xa+parton_list[Split].x()));
+  Parton daughter1(Parton(dau1_id, 51, pDau1, xa)); //Status: 51, active shower particles
+  Parton daughter2(Parton(dau2_id, 51, pDau2, xa));
+  //Parton daughter1(Parton(dau1_id, 51, pDau1, xa+parton_list[Split].x())); //Summing up formation times
+  //Parton daughter2(Parton(dau2_id, 51, pDau2, xa+parton_list[Split].x()));
   daughter1.set_mom1(Split), daughter1.set_mom2(0);
   daughter2.set_mom1(Split), daughter2.set_mom2(0);
   daughter1.set_cols(col1);
@@ -202,7 +239,8 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   recoiler.reset_momentum(UpSpect);
   recoiler.set_mom1(Spect), recoiler.set_mom2(Spect);
   recoiler.set_stat(52);
-  recoiler.set_x(xr+parton_list[Spect].x());
+  recoiler.set_x(xr);
+  recoiler.set_x(xr+parton_list[Spect].x());  //Summing up formation times
   parton_list.push_back(recoiler);
   int Rec = int(parton_list.size()) - 1;
 

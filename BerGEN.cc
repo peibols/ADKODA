@@ -87,6 +87,30 @@ InitData BerGEN::read_in_parameters(std::string input_file) {
   if (tempinput != "empty") std::istringstream(tempinput) >> temp_shower_kernel;
   parameter_list.shower_kernel = temp_shower_kernel;
 
+  // Medium is applied or not
+  int temp_medium = 0;
+  tempinput = Util::StringFind4(input_file, "medium");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_medium;
+  parameter_list.medium = temp_medium;
+
+  // Jet transport parameter in GeV3
+  double temp_qhat0 = 0.;
+  tempinput = Util::StringFind4(input_file, "qhat0");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_qhat0;
+  parameter_list.qhat0 = temp_qhat0;
+
+  // Medium fixed size in GeV-1
+  double temp_L0 = 0.;
+  tempinput = Util::StringFind4(input_file, "L0");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_L0;
+  parameter_list.L0 = temp_L0;
+
+  // Medium fixed temperature in GeV
+  double temp_T0 = 0.;
+  tempinput = Util::StringFind4(input_file, "T0");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_T0;
+  parameter_list.T0 = temp_T0;
+
   return parameter_list;
 
 }

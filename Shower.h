@@ -55,6 +55,8 @@ class Shower {
     double t_max;
     double max_alpha_s;
 
+    int counter;
+
   private:
 
     const InitData &DATA;

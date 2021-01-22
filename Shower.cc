@@ -56,19 +56,21 @@ void Shower::init ( InPartons inpartons) {
   double ecms2 = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());
   if      (DATA.evol_scale==0) {              // pt ordering
     t_min = std::pow(DATA.pt_min, 2.);
-    t_max = std::min(std::pow(DATA.pt_max, 2.), ecms2/4.);
+    //t_max = std::min(std::pow(DATA.pt_max, 2.), ecms2/4.);
+    t_max = std::pow(DATA.pt_max, 2.); //Fix ptmax, but in the end the dipole mass will give the proper constraint, which is above.
   }
   else if (DATA.evol_scale==1) {              // m ordering
     t_min = std::pow(DATA.pt_min, 2.) * 4.;
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms2);
+    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms2);
+    t_max = std::pow(DATA.pt_max, 2.) * 4.;
   }
-  else if (DATA.evol_scale==2) {              // tf-1 ordering
+  else if (DATA.evol_scale==2) {              // tf^{-1} ordering
     t_min = std::pow(DATA.pt_min, 2.) * 2. / (std::sqrt(ecms2)/2.);
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (std::sqrt(ecms2)/2.), ecms2 /(2.*std::sqrt(ecms2)/2.));
+    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (std::sqrt(ecms2)/2.), ecms2 /(2.*std::sqrt(ecms2)/2.));
+    t_max = std::pow(DATA.pt_max, 2.) * 2. / (std::sqrt(ecms2)/2.);
   }
   else if (DATA.evol_scale==3) {              // qt ordering
     t_min = std::pow(DATA.pt_min, 2.) * 16.;
-    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4. * ecms2);
     t_max = std::pow(ecms2/DATA.pt_min, 2.);
   }
 
@@ -89,6 +91,7 @@ void Shower::run () {
   //std::cout << "Initial Parton List size = " << parton_list.size() << endl;
   //std::cout << "Shower RUNNING" << std::endl;
   bool do_evolve = 1;
+  counter = 0;
   while (do_evolve) do_evolve = evolve(); // FIXME how does this evolve() called?!
 
   //std::cout << "Shower FINISHED" << std::endl;
@@ -100,6 +103,7 @@ double Shower::beta0(int nf) { return 11./6.*CA - 2./3.*TR*nf; }
 
 double Shower::beta1(int nf) { return 17./6.*CA*CA - (5./3.*CA + CF)*TR*nf; }
 
+/*
 double Shower::alpha_s0(double t) { // FIXME use a particle list for the mass
   double tref, asref, b0;
   double mb2  = std::pow(4.75, 2.);
@@ -170,16 +174,17 @@ double Shower::alpha_s(double t) { // FIXME use a particle list for the mass
   w = 1. + b0*asref*std::log(t/tref);
   return asref / w * ( 1. - b1 / b0 * asref * std::log(w)/w );
 }
+*/
 
-/*
 double Shower::alpha_s( double t ) {
   double Nf = 5.;
   double alpha;
-  if (t > 0.95) alpha = 12.0 * M_PI / ( 33.0 - 2.0 * Nf ) / std::log( t / ( Lambda * Lambda ) );
-  else          alpha = 12.0 * M_PI / ( 33.0 - 2.0 * Nf ) / std::log( 0.95 / ( Lambda * Lambda ) );
+  double beta0 = ( 33. - 2. * Nf ) / 12. / M_PI;
+  double tmin = 0.95*0.95;
+  if (t > tmin) alpha = 1. / beta0 / std::log( t / ( Lambda * Lambda ) );
+  else          alpha = 1. / beta0 / std::log( tmin / ( Lambda * Lambda ) );
   return alpha;
 }
-*/
 
 
 
