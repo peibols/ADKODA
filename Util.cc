@@ -84,6 +84,8 @@ void Rotation(FourVector &vector, double angle, double axis[3]) {
   //Normalize the axis if its wasn't.
   double k[3];
   double axis_abs = sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]);
+  if (axis_abs == 0.) axis_abs = 1.;
+  //cout << " axis abs= " << axis_abs << endl;
   for (int i = 0; i < 3; i++) k[i] = axis[i]/axis_abs;
 
   double vec[3], vec_prime[3];

@@ -119,7 +119,7 @@ std::vector<Parton> InPartons::PartonList() {
   hard_parton2.set_scale(ecms);
 
   hard_list.push_back(hard_parton1);
-  //hard_list.push_back(hard_parton2); // Just one parton for TESTING
+  hard_list.push_back(hard_parton2); // Just one parton for TESTING
 
   return hard_list;
 }

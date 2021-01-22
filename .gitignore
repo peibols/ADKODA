@@ -1,0 +1,9 @@
+ADKODA_analysis/
+plotting/
+test/
+results/
+
+main
+*.dYSM
+*.dat
+*.out

@@ -126,6 +126,8 @@ class Parton : protected fjcore::PseudoJet
 
     FourVector p();
 
+    double pplus() { return 1./2.*(p().z()+p().t()); }
+
     void set_x(const FourVector& x); //Creation point in the lab frame
     FourVector x();
     

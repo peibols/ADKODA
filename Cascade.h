@@ -21,7 +21,7 @@ class Cascade {
 
     void run();
 
-    bool evolve(double &start_time, std::vector<Parton> &cascade_list);
+    bool evolve(double &start_time, std::vector<Parton> &cascade_list, std::vector<Parton> &active_list, std::vector<int> &active_map);
 
     double BroadInt();
     double GenerateQ(double R);

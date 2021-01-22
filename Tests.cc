@@ -3,12 +3,84 @@
 #include <fstream>
 #include <cstring>
 #include <string>
+#include "fastjet/contrib/SoftDrop.hh"
+#include "fastjet/contrib/Recluster.hh"
+#include "fastjet/ClusterSequence.hh"
 
 #include "Tests.h"
 #include "BerGEN.h"
 #include "Util.h"
 
+using namespace fastjet;
+
 namespace Adkoda {
+
+void Test_FirstMass(std::vector<Parton> parton_list, std::ofstream &outfile, double mass_hist[2][20], double &njets) {
+
+  std::vector<PseudoJet> particles;
+  for (int i=0; i<parton_list.size(); i++) {
+    if (parton_list[i].stat()<0) continue;
+    fastjet::PseudoJet p;
+    p.reset_momentum(parton_list[i].px(),parton_list[i].py(),parton_list[i].pz(),parton_list[i].e());
+    p.set_user_index(i);
+    particles.push_back(p);
+  }
+
+  double R=0.4;
+  JetDefinition jet_def(antikt_algorithm, R);
+  ClusterSequence cs(particles, jet_def);
+  double jet_ptmin=50.;
+  std::vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(jet_ptmin));
+  for (unsigned int ijet=0; ijet<jets.size(); ijet++) {
+    //cout << " jetpt= " << jets[ijet].pt() << endl;
+    double jetm=jets[ijet].m();
+    //cout << " jet mass= " << jetm << endl;
+    std::vector<PseudoJet> constituents = sorted_by_pt(jets[ijet].constituents());
+    int ihard = constituents[0].user_index();
+    int anc=ihard;
+    int orig=-1000;
+    double highest_splitmass=0.;
+    while (true) {
+      if (parton_list[anc].stat()==23) {
+        cout << " hard never splitted! " << endl;
+        break;
+      }
+      if (parton_list[anc].stat()==-23) {
+        orig = anc;
+        //cout << " found the orig = " << orig << endl;
+        break;
+      }
+      int mom=parton_list[anc].mom1();
+      int d1=parton_list[mom].d1();
+      int d2=parton_list[mom].d2();
+      if (d1!=0 && d2!=0 && d1!=d2) { 
+        double split_mass = std::pow(parton_list[d1].e()+parton_list[d2].e(),2.)
+				-std::pow(parton_list[d1].px()+parton_list[d2].px(),2.)
+				-std::pow(parton_list[d1].py()+parton_list[d2].py(),2.)
+				-std::pow(parton_list[d1].pz()+parton_list[d2].pz(),2.);
+        //cout << " split mass= " << std::sqrt(split_mass) << endl;
+        PseudoJet p1(parton_list[d1].px(),parton_list[d1].py(),parton_list[d1].pz(),parton_list[d1].e());
+        PseudoJet p2(parton_list[d2].px(),parton_list[d2].py(),parton_list[d2].pz(),parton_list[d2].e());
+        double deltaR=p1.delta_R(p2);
+        double delR1=p1.delta_R(jets[ijet]);
+        double delR2=p2.delta_R(jets[ijet]);
+        //if (deltaR > R+0.1) cout << " split beyond R! " << endl;
+        if (delR1>R || delR2>R) {
+          //cout << " split beyond R! " << endl;
+        }
+        else highest_splitmass = std::sqrt(split_mass);
+      }
+      anc=parton_list[anc].mom1();
+    }
+    //cout << " HIGHEST= " << highest_splitmass << endl;
+    int nm=int(jetm/2.);
+    mass_hist[0][nm]+=1.;
+    nm=int(highest_splitmass/2.);
+    mass_hist[1][nm]+=1.;
+    njets+=1.;
+  }
+
+}
 
 //TEST MODULE: Save the initiator e-e+ kinematics and event_weights
 void Test_Weights(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile) {

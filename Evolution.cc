@@ -15,26 +15,38 @@ bool Shower::evolve() {
 
   double t = t_min;
   for (unsigned int iSplit=0; iSplit<parton_list.size(); iSplit++) { // Praticle list scan
+
     Parton p_split = parton_list[iSplit];
+
     if (p_split.stat()<0) continue; // Skip if inactive parton
     if (p_split.is_frozen()) continue; // Skip if frozen parton
+
     for (unsigned int iSpect=0; iSpect<parton_list.size(); iSpect++) { // Find dipole
+
       if (iSplit == iSpect) continue;
+
       Parton p_spect = parton_list[iSpect];
+
       if (p_spect.stat()<0) continue; // Skip if inactive
       if (!p_split.ColourConnected(p_spect)) continue; // Skip if not colour connected
+
       //FIXME Nf should depend on t_max!
       for (int iKernel=0; iKernel<kernels.size(); iKernel++) { // Loop over possible kernels
+
         if (kernels[iKernel]->flav(0) != p_split.id()) continue; // Skip if kernel not applies
+
         double mar2 = m2(p_split.p(), p_spect.p());
         if (mar2 < 4.*pt_min*pt_min) continue; // Skip if dipole has no enough phase-space
-	      // Overshoot z
+	      
+	// Overshoot z
         double eps = pt_min*pt_min / mar2; //This overshoots all ordering (except AO).
         if (DATA.evol_scale == 3) eps = std::sqrt(pt_min*pt_min / mar2);
         double zp = 0.5 * (1. + std::sqrt(1. - 4.*eps));
-	      // Generate overshooted scale
+	     
+        // Generate overshooted scale
         double g  = max_alpha_s / (2.*M_PI) * kernels[iKernel]->Integral(1.-zp, zp);
         double tt = t_max * std::pow(dis(gen), 1./g);
+
         if ( tt > t ) { // Store if highest scale from all particles all recoilers and all possible splittings.
           t       = tt;
       	  wSplit  = iSplit;
@@ -43,8 +55,11 @@ bool Shower::evolve() {
       	  wmar2   = mar2;
       	  wzp     = zp;
         }
+
       } // End Kernel loop
+
     } // End recoiler loop
+
   } // End parton_list loop
 
   //t_max = t; // Don't update scale here, emission could be vetoed!
@@ -71,7 +86,7 @@ bool Shower::evolve() {
     // Accept / Reject veto procedure
     double f = (1.-y) * alpha_s(pt2ev) * kernels[wKernel]->Value(z, y);
     double g = max_alpha_s * kernels[wKernel]->Estimate(z);
-    if (pt2ev < 1.) std::cout << "ptev < ptmin" << std::endl;
+    //if (pt2ev < 1) std::cout << "ptev < ptmin" << std::endl;
     if (DATA.shower_kernel==0) { // If does not succeed, have a next try
       if (f/g < dis(gen) || Q2 > wmar2 || pt2ev < pt_min*pt_min || pt2_daug < 0.0) { t_max = t; return 1; }  //veto, scale in between the min/max scale, physical pt.
     } else if (DATA.shower_kernel==1) {
@@ -181,19 +196,20 @@ bool Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   }
 
   // Check if emission should be vetoed
-  double veto_tf    = xa.t();
-  double accum_tf   = (xa+parton_list[Split].x()).t();
-  double tf_med     = std::sqrt(2.*fmin(pDau1.t(),pDau2.t())/qhat);
-  std::cout << " veto_tf= " << veto_tf << " tf_med= " << tf_med << " accum_tf= " << accum_tf << std::endl;
-  //if (veto_tf > tf_med) {
-  if (accum_tf > tf_med) {
-    //if (tf_med < L_med) { 
-    if (parton_list[Split].x().t() + tf_med < L_med) {
-      std::cout << "Freezing \n";
-      return 1;
-    }
-    else {
-      std::cout << "Outside medium!" << std::endl;
+  if (DATA.do_quenching) {
+    double qhatbar = DATA.qhat/NC;
+    double Ea  = (mar2+Q2) / 2. / std::sqrt( mar2 );
+    double kttwo = Q2*z*(1-z);   // Valid for pt ordered only
+    double kbrtwo = z*(1.-z)*Ea*qhatbar*((1.-z)*CA+z*z*CA);
+    if (kttwo<kbrtwo) {
+      double curr_pos = sqrt(pow((xa+parton_list[Split].x()).x(),2.)+
+	                     pow((xa+parton_list[Split].x()).y(),2.)+
+			     pow((xa+parton_list[Split].x()).z(),2.));
+      //if (curr_pos < L_med)
+      //{
+        //cout << " FREEZING " << endl;
+        return 1;
+      //} 
     }
   }
 

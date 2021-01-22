@@ -11,6 +11,8 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
   if (DATA.shower_kernel == 0) { //Alterelli-Parisi splitting kernels
     Pgg* pgg = new Pgg (21, 21, 21);
     kernels.push_back(pgg);
+
+/*
     Pgq* pgq;
     Pqq* pqq;
      for (int fl = 1; fl <= 5; fl++) {
@@ -21,6 +23,8 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
       pgq = new Pgq (21, fl, -fl);
       kernels.push_back(pgq);
     }
+*/
+
   } else if (DATA.shower_kernel == 1) { //Catani-Seymour splitting kernels
     Pgg_CS* pgg = new Pgg_CS (21, 21, 21);
     kernels.push_back(pgg);
@@ -61,19 +65,23 @@ void Shower::init ( InPartons inpartons) {
   double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;
   if      (DATA.evol_scale==0) {              // pt ordering
     t_min = std::pow(DATA.pt_min, 2.);
-    t_max = std::min(std::pow(DATA.pt_max, 2.), ecms);
+    t_max = std::pow(DATA.pt_max/2.,2.);
+    //t_max = std::min(std::pow(DATA.pt_max, 2.), ecms);
   }
   else if (DATA.evol_scale==1) {              // m ordering
     t_min = std::pow(DATA.pt_min, 2.) * 4.;
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms);
+    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms);
+    t_max = std::pow(DATA.pt_max/2., 2.) * 4.;
   }
   else if (DATA.evol_scale==2) {              // tf ordering
     t_min = std::pow(DATA.pt_min, 2.) * 2. / (DATA.pt_max/2.);
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (DATA.pt_max/2.), ecms/2./(DATA.pt_max/2.));
+    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (DATA.pt_max/2.), ecms/2./(DATA.pt_max/2.));
+    t_max = std::pow(DATA.pt_max/2., 2.) * 2. / DATA.pt_min;
   }
   else if (DATA.evol_scale==3) {              // qt ordering
     t_min = std::pow(DATA.pt_min, 2.) * 16.;
-    t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4.*ecms);
+    //t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4.*ecms);
+    t_max = std::pow(DATA.pt_max/2., 2.) * 16.;
   }
 
   // Update max_color index
@@ -90,15 +98,15 @@ void Shower::init ( InPartons inpartons) {
 
 void Shower::run () {
 
-  std::cout << "Initial Parton List size = " << parton_list.size() << endl;
-  std::cout << "Shower RUNNING" << std::endl;
+  //std::cout << "Initial Parton List size = " << parton_list.size() << endl;
+  //std::cout << "Shower RUNNING" << std::endl;
 
   // Vacuum Shower
   bool do_evolve = 1;
   while (do_evolve) do_evolve = evolve(); // FIXME how does this evolve() called?!
 
-  std::cout << "Shower FINISHED" << std::endl;
-  std::cout << "Final Parton List size = " << parton_list.size() << endl;
+  //std::cout << "Shower FINISHED" << std::endl;
+  //std::cout << "Final Parton List size = " << parton_list.size() << endl;
 
 }
 

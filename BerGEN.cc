@@ -24,11 +24,13 @@ void BerGEN::next() {
   shower->init(*inpartons);
   event_weight = shower->get_event_weight();
   event_xsec = shower->get_event_xsec();
-  //shower->run();
+  shower->run();
   parton_list = shower->get_parton_list();
-  cascade->init(parton_list);
-  cascade->run();
-  parton_list = cascade->get_parton_list();
+//  if (DATA.do_quenching) {
+//    cascade->init(parton_list);
+//    cascade->run();
+//    parton_list = cascade->get_parton_list();
+//  }
   //shower->print();
 
 }
@@ -121,6 +123,12 @@ InitData BerGEN::read_in_parameters(std::string input_file) {
   if (tempinput != "empty") std::istringstream(tempinput) >> temp_qhat;
   parameter_list.qhat = temp_qhat;
   
+  // Switch for parton gun
+  bool temp_do_quenching = false;
+  tempinput = Util::StringFind4(input_file, "do_quenching");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_do_quenching;
+  parameter_list.do_quenching = temp_do_quenching;
+
   return parameter_list;
 
 }

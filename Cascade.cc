@@ -86,11 +86,15 @@ void Cascade::run () {
 
     pplus = pIni.t();
 
+    std::vector<Parton> active_list = cascade_list;
+    std::vector<int> active_map;
+    active_map.push_back(cascade_list.size()-1);
+
     double curr_time = tau(p.x().t());
     double start_time = curr_time;
     //std::cout << " Start tau= " << start_time << " t_kin= " << q.x().t() << std::endl;
     bool do_evolve=1;
-    while (do_evolve) do_evolve = evolve(start_time, cascade_list);
+    while (do_evolve) do_evolve = evolve(start_time, cascade_list, active_list, active_map);
 
     // Update full parton list
     //std::cout << " i= " << i << " last_part= " << last_part << std::endl;

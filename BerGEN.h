@@ -39,6 +39,7 @@ class BerGEN {
 
     // Get #Events
     int number_events() { return DATA.number_events; }
+    int evol_var() { return DATA.evol_scale; }
 
     void print();
     double get_event_weight() { return event_weight; }
