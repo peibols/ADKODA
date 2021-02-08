@@ -2,6 +2,7 @@
 #define BerGEN_H
 
 #include "Shower.h"
+#include "Cascade.h"
 #include "InPartons.h"
 #include "data.h"
 
@@ -12,12 +13,14 @@ class BerGEN {
   private:
 
     Shower    *shower    =	nullptr;
+    Cascade   *cascade   =	nullptr;
     InPartons *inpartons = 	nullptr;
     InitData  DATA;
 
   protected:
 
     double event_weight;
+    double event_xsec;
     std::vector<Parton> parton_list;
 
   public:
@@ -36,9 +39,11 @@ class BerGEN {
 
     // Get #Events
     int number_events() { return DATA.number_events; }
+    int evol_var() { return DATA.evol_scale; }
 
     void print();
     double get_event_weight() { return event_weight; }
+    double get_event_xsec() { return event_xsec; }
     std::vector<Parton> get_parton_list() { return parton_list; }
 
 };

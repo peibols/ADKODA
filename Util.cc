@@ -6,6 +6,11 @@
 
 namespace Util {
 
+  double Delta(FourVector v1, FourVector v2) {
+      return std::sqrt(std::pow(v1.rapidity() - v2.rapidity(), 2.) +
+                       std::pow(v1.phi() - v2.phi(), 2.));
+    }
+
 double m(const FourVector& v1, const FourVector& v2) {
     double m2 = std::pow(v1.t() + v2.t(), 2.) - std::pow(v1.x() + v2.x(), 2.)
        - std::pow(v1.y() + v2.y(), 2.) - std::pow(v1.z() + v2.z(), 2.);
@@ -79,6 +84,8 @@ void Rotation(FourVector &vector, double angle, double axis[3]) {
   //Normalize the axis if its wasn't.
   double k[3];
   double axis_abs = sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]);
+  if (axis_abs == 0.) axis_abs = 1.;
+  //cout << " axis abs= " << axis_abs << endl;
   for (int i = 0; i < 3; i++) k[i] = axis[i]/axis_abs;
 
   double vec[3], vec_prime[3];

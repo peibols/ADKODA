@@ -14,6 +14,7 @@ void BerGEN::init() {
 
   inpartons = new InPartons(DATA);
   shower    = new Shower(DATA);
+  cascade   = new Cascade(DATA);
 
   return;
 }
@@ -22,15 +23,21 @@ void BerGEN::next() {
 
   shower->init(inpartons);
   event_weight = shower->get_event_weight();
+  event_xsec = shower->get_event_xsec();
   shower->run();
   parton_list = shower->get_parton_list();
+//  if (DATA.do_quenching) {
+//    cascade->init(parton_list);
+//    cascade->run();
+//    parton_list = cascade->get_parton_list();
+//  }
   //shower->print();
 
 }
 
-void BerGEN::print() {
-  std::cout << "Event weight: " << event_weight << std::endl;
-  std::cout << "ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t m" << std::endl;
+void BerGEN::print() { //FIXME call this from Shower as a friend
+  std::cout << "#Event weight: " << event_weight << std::endl;
+  std::cout << "#ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t m\t pt2\t x\t y\t z\t t" << std::endl;
   for (int ip=0; ip<parton_list.size(); ip++) {
     std::cout << ip << "\t ";
     parton_list[ip].display();
@@ -85,6 +92,42 @@ InitData BerGEN::read_in_parameters(std::string input_file) {
   tempinput = Util::StringFind4(input_file, "shower_kernel");
   if (tempinput != "empty") std::istringstream(tempinput) >> temp_shower_kernel;
   parameter_list.shower_kernel = temp_shower_kernel;
+
+  // alphas med
+  double temp_alphas_med = 0.3;
+  tempinput = Util::StringFind4(input_file, "alphas_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_alphas_med;
+  parameter_list.alphas_med = temp_alphas_med;
+  
+  // alphas med
+  double temp_L_med = 4.; // in fm
+  tempinput = Util::StringFind4(input_file, "L_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_L_med;
+  parameter_list.L_med = temp_L_med;
+  
+  // eps med
+  double temp_eps_med = 0.01;
+  tempinput = Util::StringFind4(input_file, "eps_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_eps_med;
+  parameter_list.eps_med = temp_eps_med;
+
+  // xmin med
+  double temp_xmin_med = 0.01;
+  tempinput = Util::StringFind4(input_file, "xmin_med");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_xmin_med;
+  parameter_list.xmin_med = temp_xmin_med;
+  
+  // qhat
+  double temp_qhat = 1.5; // in GeV^2/fm
+  tempinput = Util::StringFind4(input_file, "qhat");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_qhat;
+  parameter_list.qhat = temp_qhat;
+  
+  // Switch for parton gun
+  bool temp_do_quenching = false;
+  tempinput = Util::StringFind4(input_file, "do_quenching");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_do_quenching;
+  parameter_list.do_quenching = temp_do_quenching;
 
   return parameter_list;
 

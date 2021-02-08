@@ -104,8 +104,14 @@ class Parton : protected fjcore::PseudoJet
     void set_mass(double mass);
     double mass();
 
+    void set_scale(double scale);
+    double scale();
+
     void set_virt(double virt);
     double virt();
+
+    void set_xfrac(double xfrac) { _xfrac = xfrac; }
+    double xfrac() { return _xfrac; }
 
     void set_mom1( int mom ) { _mom1 = mom; }
     int mom1() { return _mom1; }
@@ -120,21 +126,34 @@ class Parton : protected fjcore::PseudoJet
 
     FourVector p();
 
-    void set_x(const FourVector& x);
-    const FourVector x();
+    double pplus() { return 1./2.*(p().z()+p().t()); }
+
+    void set_x(const FourVector& x); //Creation point in the lab frame
+    FourVector x();
+    
+    void set_xf(const FourVector& xf); //Destruction point in the lab frame
+    FourVector xf();
 
     bool ColourConnected(Parton& p);
 
     void display();
 
+    std::vector<int> motherList() const;
+
+    void set_is_frozen(bool is_frozen) { _is_frozen = is_frozen; }
+    bool is_frozen() { return _is_frozen; }
+
   private:
 
     FourVector _x;
+    FourVector _xf;
+    bool _is_frozen;
     int _col, _acol;
     int _id;
     int _stat;
     int _mom1, _mom2, _d1, _d2;
-    double _mass;
+    double _mass, _scale;
+    double _xfrac;
 };
 
 } // end namespace Adkoda

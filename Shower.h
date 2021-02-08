@@ -24,6 +24,9 @@ class Shower {
 
     bool evolve();
 
+    void med_evolve();
+    bool do_cascade(std::vector<Parton> cascade_list);
+
     void print();
 
     double beta0( int nf );
@@ -31,11 +34,12 @@ class Shower {
     double alpha_s0( double t );
     double alpha_s( double t );
 
-    void Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 );
+    bool Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 );
 
     void MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]);
 
     double get_event_weight() { return event_weight; }
+    double get_event_xsec() { return event_xsec; }
     std::vector<Parton> get_parton_list() { return parton_list; }
 
   protected:
@@ -46,12 +50,17 @@ class Shower {
 
     std::vector<Kernel*> kernels;
     double event_weight;
+    double event_xsec;
     std::vector<Parton> parton_list;
     int max_colour;
     double pt_min;
     double t_min;
     double t_max;
     double max_alpha_s;
+
+    double L_med;
+    double alphas_med;
+    double qhat;    
 
   private:
 

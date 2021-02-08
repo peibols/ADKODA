@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ADKODA
 
 ## HepMC3
@@ -44,3 +45,10 @@ Additionally, one needs to set the path `PYTHIA8DATA` to point to the `xmldoc` f
 + HepMC3 writer is not properly adapted to account for including beam remnants
 
 + Still need to set the daughters of incoming hard partons with `status=-21`. This is mostly necessary in order for them to be printed in the HepMC3 format.
+=======
+# BerGen
+
+To compile and run:
+$./compiler.sh main
+$./main bergen_input
+>>>>>>> medium_dani

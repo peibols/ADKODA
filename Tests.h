@@ -6,14 +6,22 @@
 
 namespace Adkoda {
 
-void Test_Weights(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile);
+void Test_Weights(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile);
 
-void Test_PrintFinalPartons(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile);
+void Test_PrintFinalPartons(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile);
 
 void Test_EnergyMomentumConservation(std::vector<Parton> parton_list);
 
-void Test_PrintLundPlane(std::vector<Parton> parton_list, double event_weight, std::ofstream &outfile);
+void Test_PrintLundPlane_history(std::vector<Parton> parton_list, double event_xsec, double event_weight, std::ofstream &outfile);
 
+<<<<<<< HEAD
 void write_HepMC3_event(std::vector<Parton> parton_list, double event_weight, HepMC3::WriterAscii &outfile);
 
 }
+=======
+void Test_FirstMass(std::vector<Parton> parton_list, std::ofstream &outfile, double mass_hist[2][20], double &njets);
+
+void write_HepMC3_event(std::vector<Parton> parton_list, double event_xsec, double event_weight, HepMC3::WriterAscii &outfile, int nEv);
+
+} // end namespace Adkoda
+>>>>>>> medium_dani
