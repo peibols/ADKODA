@@ -7,6 +7,14 @@ using namespace Util;
 
 namespace Adkoda {
 
+InPartons::InPartons(const InitData &DATA_in) : DATA(DATA_in) {
+  
+  if (DATA.parton_gun==2) {
+    PythiaInit();  
+  }
+
+}
+
 std::vector<Parton> InPartons::PartonList() {
   int id1 = -1000;
   int id2 = -1000;

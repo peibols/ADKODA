@@ -17,10 +17,6 @@
 #define CF ((NC*NC-1.)/(2.*NC))
 #endif
 
-#ifndef Lambda
-#define Lambda (0.2)
-#endif
-
 #ifndef MZ2
 #define MZ2 (91.1876*91.1876)
 #endif

@@ -18,7 +18,7 @@ class Shower {
     Shower(const InitData &DATA_in);
     ~Shower() {}
 
-    void init( InPartons inpartons);
+    void init( InPartons *inpartons);
 
     void run();
 

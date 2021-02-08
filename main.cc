@@ -4,6 +4,8 @@
 #include "Tests.h"
 #include "HepMC3/WriterAscii.h"
 
+#include "HepMC3/WriterAscii.h"
+
 using namespace Adkoda;
 using namespace Util;
 using namespace std;
@@ -79,6 +81,16 @@ int main(int argc, char **argv) {
     double event_weight = bergen.get_event_weight();
     //double event_xsec   = bergen.get_event_xsec();
     std::vector<Parton> parton_list = bergen.get_parton_list();
+<<<<<<< HEAD
+
+    Test_Weights(parton_list, event_weight, outfile_test_weights);
+    Test_PrintFinalPartons(parton_list, event_weight, outfile_test_FinalPartons);
+    Test_EnergyMomentumConservation(parton_list);
+    //Test_PrintLundPlane(parton_list, event_weight, outfile_test_LundPlane);
+
+    // HepMC3 Ascii writer
+    write_HepMC3_event(parton_list, event_weight, outfile_test_HepMC3);
+=======
     //Test_Weights(parton_list, event_xsec, event_weight, outfile_test_weights);
     //Test_PrintFinalPartons(parton_list, event_xsec, event_weight, outfile_test_FinalPartons);
     //Test_EnergyMomentumConservation(parton_list);
@@ -111,6 +123,7 @@ int main(int argc, char **argv) {
       double tauf = alphas_med * std::sqrt(qhat/pplus) * tf / 0.1973;
 
       //cout << " pplus= " << pplus << " taui= " << taui << " tauf= " << tauf << endl;
+>>>>>>> medium_dani
 
       for (int c=0; c<ntau_cuts; c++) {
         if (taui<=tau_cuts[c] && tauf>tau_cuts[c]) {

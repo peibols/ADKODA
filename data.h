@@ -8,7 +8,7 @@ typedef struct init_data {
   int evol_scale;
   int shower_kernel;
 
-  bool parton_gun;
+  int parton_gun;
   int hard_partons;	// 0 for gg, 1 for qq, else for qg
 
   double pt_max; //COM energy
