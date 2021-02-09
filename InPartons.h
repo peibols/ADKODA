@@ -19,6 +19,7 @@ class InPartons {
 
    double event_weight;
    double event_xsec;
+   double hard_pt_max;
    std::vector<Parton> PartonList();
    double ME2(int id, double s, double t);
 

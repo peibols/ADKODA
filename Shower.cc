@@ -48,8 +48,8 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
 
   // Medium parameters
   alphas_med = DATA.alphas_med;
-  L_med = DATA.L_med/0.1973; // in GeV^-1
-  qhat= DATA.qhat * 0.1973; // in GeV^3
+  L0 = DATA.L0; // in GeV^-1
+  qhat0= DATA.qhat0; // in GeV^3
 
   //std::cout << "Shower CONSTRUCTED" << std::endl;
 
@@ -57,39 +57,38 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
 
 void Shower::init (InPartons *inpartons) {
 
-<<<<<<< HEAD
   if (DATA.parton_gun==0 || DATA.parton_gun==1) parton_list = inpartons->PartonList();
   else {
     parton_list = inpartons->PythiaPartonList();
   }
   event_weight = inpartons->event_weight;
-=======
-  parton_list  = inpartons.PartonList();
-  event_weight = inpartons.event_weight;
-  event_xsec = inpartons.event_xsec;
->>>>>>> medium_dani
+  event_xsec = inpartons->event_xsec;
+  hard_pt_max = inpartons->hard_pt_max;
+
+  std::cout << " Weight= " << event_weight << " Xsec= " << event_xsec << " Pt Max= " << hard_pt_max << std::endl;
 
   // Fix minimum and maximum scale
-  double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;
+  //double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;
   if      (DATA.evol_scale==0) {              // pt ordering
     t_min = std::pow(DATA.pt_min, 2.);
-    t_max = std::pow(DATA.pt_max/2.,2.);
+    t_max = std::pow(hard_pt_max,2.);         // Right way for PYTHIA8 input
+    //t_max = std::pow(hard_pt_max/2.,2.);
     //t_max = std::min(std::pow(DATA.pt_max, 2.), ecms);
   }
   else if (DATA.evol_scale==1) {              // m ordering
     t_min = std::pow(DATA.pt_min, 2.) * 4.;
     //t_max = std::min(std::pow(DATA.pt_max, 2.) * 4., ecms);
-    t_max = std::pow(DATA.pt_max/2., 2.) * 4.;
+    t_max = std::pow(hard_pt_max/2., 2.) * 4.;
   }
   else if (DATA.evol_scale==2) {              // tf ordering
-    t_min = std::pow(DATA.pt_min, 2.) * 2. / (DATA.pt_max/2.);
+    t_min = std::pow(DATA.pt_min, 2.) * 2. / (hard_pt_max/2.);
     //t_max = std::min(std::pow(DATA.pt_max, 2.) * 2. / (DATA.pt_max/2.), ecms/2./(DATA.pt_max/2.));
-    t_max = std::pow(DATA.pt_max/2., 2.) * 2. / DATA.pt_min;
+    t_max = std::pow(hard_pt_max/2., 2.) * 2. / DATA.pt_min;
   }
   else if (DATA.evol_scale==3) {              // qt ordering
     t_min = std::pow(DATA.pt_min, 2.) * 16.;
     //t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4.*ecms);
-    t_max = std::pow(DATA.pt_max/2., 2.) * 16.;
+    t_max = std::pow(hard_pt_max/2., 2.) * 16.;
   }
 
   // Update max_color index
@@ -106,15 +105,17 @@ void Shower::init (InPartons *inpartons) {
 
 void Shower::run () {
 
-  //std::cout << "Initial Parton List size = " << parton_list.size() << endl;
-  //std::cout << "Shower RUNNING" << std::endl;
+  std::cout << "Initial Parton List size = " << parton_list.size() << endl;
+  print();
+  std::cout << "Shower RUNNING" << std::endl;
 
   // Vacuum Shower
   bool do_evolve = 1;
   while (do_evolve) do_evolve = evolve(); // FIXME how does this evolve() called?!
 
-  //std::cout << "Shower FINISHED" << std::endl;
-  //std::cout << "Final Parton List size = " << parton_list.size() << endl;
+  std::cout << "Shower FINISHED" << std::endl;
+  std::cout << "Final Parton List size = " << parton_list.size() << endl;
+  print();
 
 }
 
@@ -209,7 +210,7 @@ void Shower::print() {
   //<< "pt2\t\t"
   //<< "x\t\t y\t\t z\t\t t"
   << std::endl;
-  for (int ip=0; ip<parton_list.size(); ip++) {
+  for (unsigned int ip=0; ip<parton_list.size(); ip++) {
     std::cout << ip << "\t ";
     parton_list[ip].display();
   }

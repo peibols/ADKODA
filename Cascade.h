@@ -40,9 +40,9 @@ class Cascade {
     std::vector<Kernel*> kernels;
     std::vector<Parton> parton_list;
 
-    double L_med;
+    double L0;
     double alphas_med;
-    double qhat;
+    double qhat0;
     double eps_med;    
     double xmin_med;
 

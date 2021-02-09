@@ -19,14 +19,14 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
   int wKernel;
   int wSplit;
 
-  for (int iSplit=0; iSplit<active_list.size(); iSplit++) {
+  for (unsigned int iSplit=0; iSplit<active_list.size(); iSplit++) {
   
     Parton p = active_list[iSplit];
  
     double xi=p.xfrac();
 
     // Splitting kernels
-    for (int iKernel=0; iKernel<kernels.size(); iKernel++) {
+    for (unsigned int iKernel=0; iKernel<kernels.size(); iKernel++) {
       if (kernels[iKernel]->flav(0) != p.id()) continue; // Skip if kernel not applies
 
       // Generate next t
@@ -88,7 +88,7 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
   
   //std::cout << " time = " << time << " split_pos = " << split_pos * 0.1973 << std::endl; 
 
-  if (split_pos > L_med) { // Finish attempts if outside of medium
+  if (split_pos > L0) { // Finish attempts if outside of medium
     cascade_list[map].set_stat(103); // Outside medium stat
     active_list.erase(active_list.begin()+wSplit);
     active_map.erase(active_map.begin()+wSplit);

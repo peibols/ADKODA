@@ -29,6 +29,8 @@ std::vector<Parton> InPartons::PartonList() {
   FourVector p0, p1, p2, x;
   std::vector<Parton> hard_list;
 
+  hard_pt_max = DATA.pt_max;
+
   double ecms = 0.;
   if (DATA.parton_gun==1) ecms = DATA.pt_max;
   else if (DATA.parton_gun==0) ecms = 91.1876;

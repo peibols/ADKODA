@@ -24,10 +24,10 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x) {
   _mom2=0;
   _mass=0.; //FIXME Assume all partons massless for the moment
   _scale=0.; //Scale pt [GeV] in which was produced
+  _dippart=0; //Color dipole partner from the splitting
 
   _xfrac=1.; //Energy fraction wrt cascade initiator
 
-  _is_frozen=0;
 }
 
 void Parton::display() {
@@ -39,6 +39,7 @@ void Parton::display() {
 	<< p().x() << "\t " << p().y() << "\t " << p().z() << "\t " << p().t() << "\t "
 	<< _mass << "\t "
   << _scale << "\t "
+  << _dippart << "\t "
   << x().x() << "\t " << x().y() << "\t " << x().z() << "\t " << x().t() << "\t"
   << xf().x() << "\t " << xf().y() << "\t " << xf().z() << "\t " << xf().t()
   << endl;
@@ -81,6 +82,8 @@ double Parton::mass() { return _mass; }
 void Parton::set_scale(double scale) { _scale=scale; } //The pt scale in which was produced.
 double Parton::scale() { return _scale; }
 
+void Parton::set_dippart(int dippart) { _dippart=dippart; } //The dipole partner of the splitter
+int Parton::dippart() { return _dippart; }
 
 std::vector<int> Parton::motherList() const { // Find complete list of mothers.
   // Vector of all the mothers; created empty. Done if no event pointer.

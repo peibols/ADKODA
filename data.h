@@ -14,11 +14,13 @@ typedef struct init_data {
   double pt_max; //COM energy
   double pt_min; //Minimal scale in shower
 
+  int medium;
   bool do_quenching;
   double xmin_med;
   double eps_med;
-  double L_med;  // in fm
-  double qhat; // in GeV^2/fm
+  double L0;  // in GeV-1
+  double qhat0; // in GeV^3
+  double T0; // in GeV
   double alphas_med;
 
 } InitData;

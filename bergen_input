@@ -1,30 +1,16 @@
-<<<<<<< HEAD
-number_events 1
-# evol_scale: pt (0), m (1), tf (2), theta (3)
-evol_scale 0
-# LO: ee2qqbar (0), diparton gun (1)
-parton_gun 2
-# hard_partons: gg 0, qq 1, qg 2
-hard_partons 0
-# COM energy (Shower max scale)
-pt_max 20
-# Shower min scale
-pt_min 1.0
-# Shower kernel: A-P (0), C-S (1)
-shower_kernel 0
-=======
-number_events  10000
+number_events  1
 evol_scale 0		# evol_scale: pt (0), m (1), tf (2), theta (3)
-parton_gun 1		# LO: ee2qqbar (0), diparton gun (1)
+parton_gun 2		# LO: ee2qqbar (0), diparton gun (1), pythia (2)
 hard_partons 0		# hard_partons: gg 0, qq 1, qg 2
 pt_max 1000		# COM energy (Shower max scale)
 pt_min 1.0		# Shower min scale
 shower_kernel 0		# Shower kernel: A-P (0), C-S (1)
-qhat 1.5
+qhat0 0.3
 eps_med 0.0001
 xmin_med 0.001
-L_med 5
+L0 5
+T0 0.4
 alphas_med 0.3
-do_quenching 1
->>>>>>> medium_dani
+do_quenching 0
+medium 0
 EndOfData

@@ -27,8 +27,8 @@ Cascade::Cascade(const InitData &DATA_in) : DATA(DATA_in) {
 
   // Medium parameters
   alphas_med = DATA.alphas_med;
-  L_med = DATA.L_med/0.1973; // in GeV^-1
-  qhat= DATA.qhat*0.1973; // in GeV^3
+  L0 = DATA.L0; // in GeV^-1
+  qhat0= DATA.qhat0; // in GeV^3
   eps_med = DATA.eps_med;
   xmin_med = DATA.xmin_med;
 
@@ -69,7 +69,7 @@ void Cascade::run () {
     
     double curr_pos = p.x().p3abs() / 0.1973; // in GeV^-1
     //std::cout << " curr_pos= " << curr_pos << " L_med= " << L_med << std::endl;
-    if (curr_pos > L_med) {
+    if (curr_pos > L0) {
       std::cout << "Out of medium. " << std::endl;
       continue; // Static QGP Sphere
     }	
@@ -136,12 +136,12 @@ void Cascade::run () {
 
 double Cascade::tau(double t /*in fm*/)
 {
-  return alphas_med * std::sqrt(qhat/pplus) * t / 0.1973; // dim less
+  return alphas_med * std::sqrt(qhat0/pplus) * t / 0.1973; // dim less
 }
 
 double Cascade::tkin(double tau /*dim less*/)
 {
-  return tau / alphas_med * std::sqrt(pplus/qhat) * 0.1973; // in fm
+  return tau / alphas_med * std::sqrt(pplus/qhat0) * 0.1973; // in fm
 }
 
 

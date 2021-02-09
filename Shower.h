@@ -34,7 +34,7 @@ class Shower {
     double alpha_s0( double t );
     double alpha_s( double t );
 
-    bool Update( int Split, int Spect, int Kernel, double mar2, double z, double y, double Q2 );
+    void Update( int Split, int Spect, int Kernel, double mar2, double z, double Q2 );
 
     void MakeColours( int Split, int Spect, int dau_id, int col1[2], int col2[2]);
 
@@ -51,6 +51,7 @@ class Shower {
     std::vector<Kernel*> kernels;
     double event_weight;
     double event_xsec;
+    double hard_pt_max;
     std::vector<Parton> parton_list;
     int max_colour;
     double pt_min;
@@ -58,9 +59,9 @@ class Shower {
     double t_max;
     double max_alpha_s;
 
-    double L_med;
+    double L0;
     double alphas_med;
-    double qhat;    
+    double qhat0;    
 
   private:
 
