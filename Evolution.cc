@@ -260,7 +260,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   Parton recoiler = parton_list[Spect];
   recoiler.reset_momentum(UpSpect);
   recoiler.set_mom1(Spect), recoiler.set_mom2(Spect);
-  recoiler.set_stat(52);
+  if (recoiler.stat()!=63) recoiler.set_stat(52);
   recoiler.set_x(xr);
   recoiler.set_x(xr+parton_list[Spect].x());  //Summing up formation times
   parton_list.push_back(recoiler);

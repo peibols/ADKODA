@@ -57,6 +57,18 @@ void Cascade::run () {
 
   std::vector<Parton> ini_list = parton_list;
 
+  double initial_p[4]={0.};
+  for (unsigned int i=0; i<ini_list.size(); i++) {
+    Parton p = ini_list[i];
+    //cout << i << " "; p.display();
+    if (p.stat()<0) continue;
+    initial_p[0]+=p.px();
+    initial_p[1]+=p.py();
+    initial_p[2]+=p.pz();
+    initial_p[3]+=p.e();
+  }
+  cout << " Initial p= " << initial_p[0] << " " << initial_p[1] << " " << initial_p[2] << " " << initial_p[3] << endl;  
+
   for (unsigned int i=0; i<ini_list.size(); i++) {
 
     Parton p = ini_list[i];
@@ -85,6 +97,12 @@ void Cascade::run () {
     cascade_list[cascade_list.size()-1].reset_momentum(pIni);
 
     pplus = pIni.t();
+    xmin_med = DATA.T0 / pplus;
+    if (xmin_med < eps_med )
+    {
+      cout << " PROBLEM xmin_med = " << xmin_med << " eps_med= " << eps_med << std::endl;
+      cout << std::endl;
+    }
 
     std::vector<Parton> active_list = cascade_list;
     std::vector<int> active_map;

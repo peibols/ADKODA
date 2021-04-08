@@ -28,6 +28,8 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
   } else if (DATA.shower_kernel == 1) { //Catani-Seymour splitting kernels
     Pgg_CS* pgg = new Pgg_CS (21, 21, 21);
     kernels.push_back(pgg);
+    
+ /*   
     Pgq_CS* pgq;
     Pqq_CS* pqq;
      for (int fl = 1; fl <= 5; fl++) {
@@ -38,6 +40,8 @@ Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
       pgq = new Pgq_CS (21, fl, -fl);
       kernels.push_back(pgq);
     }
+*/
+
   } else std::cout << "ERROR in bergen_input: shower_kernel = 0, 1." << std::endl;
 
   // Alpha_s and scale cutoff
@@ -65,7 +69,7 @@ void Shower::init (InPartons *inpartons) {
   event_xsec = inpartons->event_xsec;
   hard_pt_max = inpartons->hard_pt_max;
 
-  std::cout << " Weight= " << event_weight << " Xsec= " << event_xsec << " Pt Max= " << hard_pt_max << std::endl;
+  //std::cout << " Weight= " << event_weight << " Xsec= " << event_xsec << " Pt Max= " << hard_pt_max << std::endl;
 
   // Fix minimum and maximum scale
   //double ecms = Util::m2(parton_list[parton_list.size()-2].p(), parton_list[parton_list.size()-1].p());;
@@ -105,17 +109,17 @@ void Shower::init (InPartons *inpartons) {
 
 void Shower::run () {
 
-  std::cout << "Initial Parton List size = " << parton_list.size() << endl;
-  print();
-  std::cout << "Shower RUNNING" << std::endl;
+  //std::cout << "Initial Parton List size = " << parton_list.size() << endl;
+  //print();
+  //std::cout << "Shower RUNNING" << std::endl;
 
   // Vacuum Shower
   bool do_evolve = 1;
   while (do_evolve) do_evolve = evolve(); // FIXME how does this evolve() called?!
 
-  std::cout << "Shower FINISHED" << std::endl;
-  std::cout << "Final Parton List size = " << parton_list.size() << endl;
-  print();
+  //std::cout << "Shower FINISHED" << std::endl;
+  //std::cout << "Final Parton List size = " << parton_list.size() << endl;
+  //print();
 
 }
 
@@ -206,9 +210,9 @@ double Shower::alpha_s( double t ) {
 
 void Shower::print() {
   std::cout << "#Event weight: " << event_weight << std::endl;
-  std::cout << "#ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t\t py\t\t pz\t\t E\t\t m\t\t"
+  std::cout << "#ip\t ID\t Stat\t m1\t m2\t d1\t d2\t c\t ac\t px\t py\t pz\t E\t\t m\t"
   //<< "pt2\t\t"
-  //<< "x\t\t y\t\t z\t\t t"
+  << "x\t y\t z\t t"
   << std::endl;
   for (unsigned int ip=0; ip<parton_list.size(); ip++) {
     std::cout << ip << "\t ";

@@ -18,13 +18,14 @@ int main(int argc, char **argv) {
   //HepMC 2&3
   HepMC::IO_GenEvent outfile_test_HepMC("test/test_HepMC.hepmc", std::ios::out);
   HepMC3::WriterAscii outfile_test_HepMC3("test/test_HepMC3.hepmc");
-
+  
   Tests tests;
 
   cout << "#Start Program" << endl;
 
   BerGEN bergen(input_file);
   int nEv = bergen.number_events();
+ 
   bergen.init();
 
   for (int iEv = 0; iEv < nEv; iEv++) {
@@ -37,8 +38,8 @@ int main(int argc, char **argv) {
     double event_xsec   = bergen.get_event_xsec();
     std::vector<Parton> parton_list = bergen.get_parton_list();
   
-    write_HepMC_event(parton_list, event_xsec, event_weight, outfile_test_HepMC, iEv);
-    write_HepMC3_event(parton_list, event_xsec, event_weight, outfile_test_HepMC3, iEv);
+    //write_HepMC_event(parton_list, event_xsec, event_weight, outfile_test_HepMC, iEv);
+    //write_HepMC3_event(parton_list, event_xsec, event_weight, outfile_test_HepMC3, iEv);
 
     tests.run(parton_list, event_weight, event_xsec, iEv);
 

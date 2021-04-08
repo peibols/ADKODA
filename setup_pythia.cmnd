@@ -13,7 +13,7 @@ PDF:pSet = 13
 Print:quiet = off                        !dont print stuff
 Beams:idA = 2212                        !beam A (positive eta)
 Beams:idB = 2212                        !beam B (negative eta)
-Beams:eCM = 2760.                       !sqrt(s)
+Beams:eCM = 5020.                       !sqrt(s)
 SoftQCD:all = off                       !non-diffractive processes
 !HardQCD:all = on                        !hard processes
 HardQCD:gg2gg = on
@@ -25,9 +25,9 @@ PartonLevel:MPI = off                   !no multi-particle interactions
 TimeShower:pTmin = 1.                   !minimum pT needed to split
 !Random:setSeed= on                     !use random seed
 
-!PhaseSpace:bias2Selection = on         !use oversampling method
-!PhaseSpace:bias2SelectionPow = 4.      !power of the bias
-!PhaseSpace:bias2SelectionRef = 50.     !pTRef, where weight is 1
+PhaseSpace:bias2Selection = on         !use oversampling method
+PhaseSpace:bias2SelectionPow = 5.      !power of the bias
+PhaseSpace:bias2SelectionRef = 100.     !pTRef, where weight is 1
 
 PhaseSpace:pTHatMin = 50.                !use sed to set value
-PhaseSpace:pTHatMax = 50.001                 !use sed to set value
+PhaseSpace:pTHatMax = -1                 !use sed to set value

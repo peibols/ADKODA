@@ -21,7 +21,7 @@ std::vector<Parton> InPartons::PythiaPartonList() {
   event_weight = pythia.info.weight();
   event_xsec = pythia.info.sigmaGen();
   hard_pt_max = pythia.info.pTHat();
-  std::cout << " Pythia cross= " << event_xsec << std::endl;
+  //std::cout << " Pythia cross= " << event_xsec << std::endl;
 
   std::vector<Parton> hard_list;
   FourVector x;

@@ -40,7 +40,7 @@ void write_HepMC3_event(std::vector<Parton> parton_list, double event_xsec, doub
   std::vector<GenParticlePtr> beam_particles;
   for (unsigned int i = 1; i < parton_list.size(); ++i) { //FIXME i shouldnt skip the system particle, but otherwise crashes
     std::vector<int> mothers = parton_list[i].motherList();
-    if (mothers.size()) {
+    if (mothers.size()!=0) {
       GenVertexPtr prod_vtx = GenVector[mothers[0]]->end_vertex();
       if (!prod_vtx) {
         prod_vtx = std::make_shared<GenVertex>();

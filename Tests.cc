@@ -124,11 +124,24 @@ void Tests::CascadeDist(std::vector<Parton> parton_list) {
 
   double pplus;
   double alphas_med = 0.3;
-  double qhat = 1.5 * 0.1973;
+  double qhat = 0.09;
   double angle, k[3];
+  double final_p[4]={0.};
   for (unsigned int i=0; i<parton_list.size(); i++) {
 
     Parton p = parton_list[i];
+
+    //cout << i << " "; p.display();
+
+    if (p.stat()>0 || p.stat()==-102)
+    {
+      final_p[0]+=p.px();
+      final_p[1]+=p.py();
+      final_p[2]+=p.pz();
+      final_p[3]+=p.e();
+    }
+    continue;
+
     if (p.stat()==-23) { 
       FourVector pIni = p.p();
       AlignWithZ(pIni, angle, k);
@@ -136,7 +149,7 @@ void Tests::CascadeDist(std::vector<Parton> parton_list) {
       continue;
     }
     if (p.x().t()==0.) continue;
-    
+
     double ti = p.x().t();
     double taui = alphas_med * std::sqrt(qhat/pplus) * ti / 0.1973;
 
@@ -171,6 +184,8 @@ void Tests::CascadeDist(std::vector<Parton> parton_list) {
     }      
     
   }
+
+  std::cout << "Final momentum= " << final_p[0] << " " << final_p[1] << " " << final_p[2] << " " << final_p[3] << std::endl;
 
 }
 
@@ -259,7 +274,7 @@ void Tests::Test_PrintFinalPartons(std::vector<Parton> parton_list, double event
     //if (parton_list[ip].stat() < 0) continue;
      outfile << parton_list[ip].px() << " " << parton_list[ip].py() << " "
              << parton_list[ip].pz() << " " << parton_list[ip].e() << " "
-             << parton_list[ip].id() << " "
+             << parton_list[ip].id() << " " << parton_list[ip].stat() << " "
              << parton_list[ip].col() << " " << parton_list[ip].acol() << " "
              << parton_list[ip].x().x() << " " << parton_list[ip].x().y() << " "
              << parton_list[ip].x().z() << " " << parton_list[ip].x().t() << std::endl;

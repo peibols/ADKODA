@@ -24,12 +24,14 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
     Parton p = active_list[iSplit];
  
     double xi=p.xfrac();
+    double z_cutoff = eps_med / xi;
 
     // Splitting kernels
     for (unsigned int iKernel=0; iKernel<kernels.size(); iKernel++) {
       if (kernels[iKernel]->flav(0) != p.id()) continue; // Skip if kernel not applies
 
       // Generate next t
+      //double f = kernels[iKernel]->Integral(z_cutoff, 1.-z_cutoff);
       double f = kernels[iKernel]->Integral(eps_med, 1.-eps_med);
       double tt =  t_ini - std::log(dis(gen)) * std::sqrt(xi) / f;
       //std::cout << " f= " << f << std::endl;
@@ -41,6 +43,7 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
       }
     } // end splitting kernels loop
 
+
     // Broadening
     double f = BroadInt();
     double tt = t_ini - std::log(dis(gen)) / f;
@@ -49,6 +52,7 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
       wKernel	= -1;	// broadening flag
       wSplit  = iSplit;
     }
+
 
   } // end cascade loop
 
@@ -61,7 +65,7 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
     //cout << " after t= " << t << endl;
   }
 
-  if (t>2) return 0;
+//  if (t>0.1) return 0;
 
   start_time = t; // Update time
 
@@ -99,6 +103,8 @@ bool Cascade::evolve(double &start_time, std::vector<Parton> &cascade_list, std:
   if (wKernel!=-1) { // Splitting 
   
     // Generate final z value
+    double z_cutoff = eps_med / p.xfrac();
+    //double z = kernels[wKernel]->GenerateZ(z_cutoff, 1.-z_cutoff, dis(gen));
     double z = kernels[wKernel]->GenerateZ(eps_med, 1.-eps_med, dis(gen));
     //cout << " z= " << z << endl;
     if (z<0. || z>1.) {
