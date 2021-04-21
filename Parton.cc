@@ -24,7 +24,11 @@ Parton::Parton (int id, int stat, const FourVector& p, const FourVector& x) {
   _mom2=0;
   _mass=0.; //FIXME Assume all partons massless for the moment
   _scale=0.; //Scale pt [GeV] in which was produced
+  _stop_scale=0.;
   _dippart=0; //Color dipole partner from the splitting
+
+  _is_primary=0;
+  _is_frozen=0;
 
   _xfrac=1.; //Energy fraction wrt cascade initiator
 
@@ -81,6 +85,9 @@ double Parton::mass() { return _mass; }
 
 void Parton::set_scale(double scale) { _scale=scale; } //The pt scale in which was produced.
 double Parton::scale() { return _scale; }
+
+void Parton::set_stop_scale(double stop_scale) { _stop_scale=stop_scale; } 
+double Parton::stop_scale() { return _stop_scale; }
 
 void Parton::set_dippart(int dippart) { _dippart=dippart; } //The dipole partner of the splitter
 int Parton::dippart() { return _dippart; }

@@ -29,7 +29,8 @@ std::vector<Parton> InPartons::PartonList() {
   FourVector p0, p1, p2, x;
   std::vector<Parton> hard_list;
 
-  hard_pt_max = DATA.pt_max;
+  //hard_pt_max = DATA.pt_max * 2;
+  hard_pt_max = DATA.pt_max/2;
 
   double ecms = 0.;
   if (DATA.parton_gun==1) ecms = DATA.pt_max;
@@ -73,7 +74,7 @@ std::vector<Parton> InPartons::PartonList() {
     hard_parton_a.set_d1(3); //FIXME I set it by hand.
     hard_parton_b.set_d1(3);
     hard_list.push_back(hard_parton_a);
-    hard_list.push_back(hard_parton_b); 
+    hard_list.push_back(hard_parton_b);
     Parton hard_parton_c( Parton(90,-22,p1+p1,x) ); //id:0 (System), stat:22 intermediate
     hard_parton_c.set_mass(ecms);
     hard_parton_c.set_mom1(1); //FIXME set it automatically
@@ -121,6 +122,8 @@ std::vector<Parton> InPartons::PartonList() {
 
   Parton hard_parton1( Parton(id1,stat1,p1,x) );
   Parton hard_parton2( Parton(id2,stat2,p2,x) );
+  hard_parton1.set_is_primary(1);
+  hard_parton2.set_is_primary(1);
   hard_parton1.set_mom1(hard_list.size()-1);
   hard_parton2.set_mom1(hard_list.size()-1);
   hard_parton1.set_cols(cols1);

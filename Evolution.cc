@@ -20,6 +20,11 @@ bool Shower::evolve() {
 
     if (p_split.stat()<0) continue; // Skip if inactive parton
     if (p_split.stat()==63) continue; // Skip if remnant
+    if (p_split.stat()==80) continue; // Skip if thermal
+    if (p_split.stat()==64) continue; // Skip if remnant in third stage
+    if (p_split.stat()==53) continue; // Skip if frozen in third stage
+
+    //if (p_split.is_frozen()) continue;
 
     for (unsigned int iSpect=0; iSpect<parton_list.size(); iSpect++) { // Find dipole
 
@@ -28,6 +33,9 @@ bool Shower::evolve() {
       Parton p_spect = parton_list[iSpect];
 
       if (p_spect.stat()<0) continue; // Skip if inactive
+      if (p_spect.stat()==64) continue; // Skip if remnant in third stage
+      if (p_spect.stat()==53) continue; // Skip if frozen in third stage
+      //if (p_spect.is_frozen()) continue;
       if (!p_split.ColourConnected(p_spect)) continue; // Skip if not colour connected
 
       //FIXME Nf should depend on t_max!
@@ -36,10 +44,12 @@ bool Shower::evolve() {
         if (kernels[iKernel]->flav(0) != p_split.id()) continue; // Skip if kernel not applies
 
         double mar2 = m2(p_split.p(), p_spect.p());
-        if (mar2 < 4.*pt_min*pt_min) continue; // Skip if dipole has no enough phase-space
+        //if (in_third) std::cout << " Dipole mass= " << mar2 << std::endl;
+	if (mar2 < 4.*pt_min*pt_min) continue; // Skip if dipole has no enough phase-space
 	      
 	// Overshoot z
-        double eps = pt_min*pt_min / DATA.pt_max/DATA.pt_max;
+        //double eps = pt_min*pt_min / DATA.pt_max/DATA.pt_max;
+        double eps = pt_min*pt_min / hard_pt_max/hard_pt_max;
         double zp = 0.5 * (1. + std::sqrt(1. - 4.*eps));
 	     
         // Generate overshooted scale
@@ -61,6 +71,7 @@ bool Shower::evolve() {
 
   } // End parton_list loop
 
+  double prev_t_max = t_max;
   t_max = t;
 
   // Terminate shower if no winner found
@@ -84,8 +95,60 @@ bool Shower::evolve() {
   double y = 0.;
   if (DATA.shower_kernel==1) y = Q2/wmar2;
 
+  //Assume angular ordering
+  double thetac = sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0);
+  double ang = sqrt(t)/parton_list[wSplit].p().t(); 
+  if (!in_third && ang<thetac) {
+    if (first_stop==0) stop_scale = prev_t_max, first_stop=1;
+    return 1;
+  }
+
+  double Qs2 = DATA.qhat0 * DATA.L0;
+  if (in_third) {
+    bool keep=0;
+    //if (ang<thetac || pt2ev<Qs2) keep=1;
+    if (ang<thetac) keep=1;
+    if (!keep) {
+      t_max = prev_t_max;
+      return 1;
+    }
+  }
+
+
+  //if (in_third && ang>thetac) {
+    //return 1;
+  //}
+
+
+  double t_cut = std::pow(0.5*(1.-0.5)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*parton_list[wSplit].p().t(), 2.);
+  //std::cout << " t_cut= " << t_cut << std::endl;
+/*  
+  if (t <= t_cut && !in_third) {
+    if (first_stop==0) stop_scale = prev_t_max, first_stop=1;
+    return 0;
+  }
+*/
+  
+  // double t_cut = 50;
+  //double t_cut = std::pow(wzp*(1.-wzp)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*parton_list[wSplit].p().t(), 2.);
+  //double t_cut = std::pow(z*(1.-z)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*std::sqrt(wmar2)/2., 2.);
+  //double t_cut = std::pow(wzp*(1-wzp)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*std::sqrt(wmar2)/2., 2.);
+/*
+  if (t <= t_cut && !in_third) {
+    if (first_stop==0) stop_scale = prev_t_max, first_stop=1;
+    return 1;
+  }
+  double Qs2 = DATA.qhat0 * DATA.L0;
+  if (in_third) {
+    bool keep=0;
+    //if (t <= t_cut || t <= Qs2) keep=1;
+    if (t <= t_cut) keep=1;
+    if (!keep) return 1;
+  }
+*/
+ /* 
   //Stop before medium
-  if (DATA.medium != 0) {
+  if (DATA.medium != 0 && !in_third) {
     double k2br = 0., k2c = 0., k2T = 0., k2L = 0.;
     if      (DATA.shower_kernel == 0) {
       k2br = std::sqrt(2./3.*z*(1.-z)*std::sqrt(wmar2)/2.*DATA.qhat0);
@@ -97,11 +160,68 @@ bool Shower::evolve() {
       k2L  = 2.*parton_list[wSplit].p().t()*z*(1.-z)/DATA.L0;
     }
     k2T = std::sqrt(2./3.*DATA.qhat0*DATA.T0);
+    double Qs2 = DATA.qhat0 * DATA.L0;
+    //std::cout << "pt2ev= " << pt2ev << " en= " << parton_list[wSplit].p().t() << " sqrt(wmar2)= " << sqrt(wmar2) << std::endl;
+    //std::cout << " k2br= " << k2br << " k2c= " << k2c << " k2T= " << k2T << std::endl << std::endl;
     //if (k2T < 0.22*0.22) { std::cout << "ERROR in Evolution.c: T0 is too small." << std::endl; std::exit(0);}
     //if (k2T < DATA.pt_min*DATA.pt_min) { std::cout << "ERROR in Evolution.c: ptmin > thermal scale." << std::endl; std::exit(0); }
     if (DATA.medium == 1) if (pt2ev < k2L || pt2ev < k2T) return 1; //Only medium length
-    if (DATA.medium == 2 )if (pt2ev < k2br || pt2ev < k2c || pt2ev < k2T) return 1;
+    if (DATA.medium == 2) {
+//      if (pt2ev < k2br || pt2ev < k2c || pt2ev < k2T) {
+      //if (pt2ev < Qs2 || pt2ev < k2c) {
+      if (pt2ev < k2c) {
+ 
+        //parton_list[wSplit].set_is_frozen(1);
+        //parton_list[wSpect].set_is_frozen(1);
+      	if (first_stop==0) stop_scale = prev_t_max, first_stop=1;
+	//return 0; // Stop shower at first veto
+
+	if (parton_list[wSplit].stop_scale() == 0.) {
+          //std::cout << "pt2ev= " << pt2ev << " en= " << parton_list[wSplit].p().t() << " sqrt(wmar2)= " << sqrt(wmar2) << std::endl;
+          //std::cout << " k2br= " << k2br << " k2c= " << k2c << " k2T= " << k2T << std::endl << std::endl;
+          if (pt2ev < k2br) parton_list[wSplit].set_stop_scale(-1.);
+	  else if (pt2ev < k2c) {
+	    parton_list[wSplit].set_stop_scale(wmar2);
+	    std::cout << " Thetac vetoing with scale= " << wmar2 << " and En= " << parton_list[wSplit].p().t() << std::endl;
+	  }
+	  else parton_list[wSplit].set_stop_scale(-1.);
+	}
+        return 1;
+      }
+    }
   }
+*/  
+/*
+  //3rd stage vetos
+  if (DATA.medium != 0 && in_third) {
+    double k2br = 0., k2c = 0., k2T = 0., k2L = 0., Qs2 = 0.;
+    if      (DATA.shower_kernel == 0) {
+      k2br = std::sqrt(2./3.*z*(1.-z)*std::sqrt(wmar2)/2.*DATA.qhat0);
+      k2c  = std::pow(z*(1.-z)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*std::sqrt(wmar2)/2., 2.);
+      k2L  = 2.*std::sqrt(wmar2)/2.*z*(1.-z)/DATA.L0;
+    } else if (DATA.shower_kernel == 1) {
+      k2br = std::sqrt(2./3.*z*(1.-z)*parton_list[wSplit].p().t()*DATA.qhat0);
+      k2c  = std::pow(z*(1.-z)*std::sqrt(12./DATA.qhat0/DATA.L0/DATA.L0/DATA.L0)*parton_list[wSplit].p().t(), 2.);
+      k2L  = 2.*parton_list[wSplit].p().t()*z*(1.-z)/DATA.L0;
+    }
+    k2T = std::sqrt(2./3.*DATA.qhat0*DATA.T0);
+    Qs2 = DATA.qhat0 * DATA.L0;
+    Qs2 = 9.25;
+    //std::cout << "pt2ev= " << pt2ev << " en= " << parton_list[wSplit].p().t() << " sqrt(wmar2)= " << sqrt(wmar2) << std::endl;
+    //std::cout << " k2br= " << k2br << " k2c= " << k2c << " k2T= " << k2T << std::endl << std::endl;
+    //if (k2T < 0.22*0.22) { std::cout << "ERROR in Evolution.c: T0 is too small." << std::endl; std::exit(0);}
+    //if (k2T < DATA.pt_min*DATA.pt_min) { std::cout << "ERROR in Evolution.c: ptmin > thermal scale." << std::endl; std::exit(0); }
+    if (DATA.medium == 1) if (pt2ev < k2L || pt2ev < k2T) return 1; //Only medium length
+    if (DATA.medium == 2) {
+      bool keep = 0;
+      //if (pt2ev < k2c || pt2ev < Qs2) {
+      if (pt2ev < k2c) {
+        keep = 1;
+      }
+      if (!keep) return 1;
+    }
+  }
+*/
 
   // Accept / Reject veto procedure
   double f = (1.-y) * alpha_s(pt2ev) * kernels[wKernel]->Value(z, y); //1-y is necessary phase space factor in CS. It also makes the LL comparison impossible.
@@ -113,29 +233,34 @@ bool Shower::evolve() {
   else if (DATA.shower_kernel==1) {
     if (f/g < dis(gen) || Q2 > wmar2 || pt2ev > DATA.pt_max*DATA.pt_max || pt2ev < pt_min*pt_min) { return 1; }
   } else std::cout << "ERROR: shower_kernel = 0,1" << std::endl;
-
+  
+  //std::cout << " Angle= " << std::sqrt(pt2ev)/parton_list[wSplit].p().t()/(z*(1-z)) << std::endl;
+  //std::cout << " pt2ev= " << pt2ev << " in thid= " << in_third << std::endl;
+  
+  //if (in_third) std::cout << "\n Split in 3rd with evol= " << t << std::endl << std::endl;
+  
   // If success, set new kinematics of system
   Update(wSplit, wSpect, wKernel, wmar2, z, Q2);
 
-/*
   //TEST MODULE: print all (z,t)
   std::ofstream outfile_test;
-  if (!outfile_test.is_open()) outfile_test.open("test/test_veto.out", std::ios_base::app);
+  if (!outfile_test.is_open()) outfile_test.open("test/Lunds.out", std::ios_base::app);
   double qt2   = Q2/z/(1.-z);
   double en    = 0;
   if      (DATA.shower_kernel == 0) en = std::sqrt(wmar2)/2.;
   else if (DATA.shower_kernel == 1) en = parton_list[wSplit].p().t();
   double theta = std::sqrt(qt2)/en;
-  double tf    = 2.*en/Q2;
-  double qhat=0.3;
-  double L=4./0.197;
-  int in = 0;
-  if (z*(1.-z) >= 4./L/L/Q2 && z*(1.-z) >= 2.*qhat*en/3./Q2/Q2 && Q2 >= 2.*en/L) in = 1;
   outfile_test << qt2 << " " << z << " " << en << " " << pt2ev << " " <<
-                  theta << " " << Q2 << " " << tf << " " << in << std::endl;
+                  theta << " " << Q2 << " " << in_third << std::endl;
 
-  return 0; //Terminate shower after the first splititng
-*/
+  if (parton_list[wSplit].is_primary()) {
+    std::ofstream outfile_testP;
+    if (!outfile_testP.is_open()) outfile_testP.open("test/LundsPrim.out", std::ios_base::app);
+    outfile_testP << qt2 << " " << z << " " << en << " " << pt2ev << " " <<
+                  theta << " " << Q2 << " " << in_third << std::endl;
+  }
+
+//  return 0; //Terminate shower after the first splititng
 
 /*
   //TEST MODULE: stop at the first branch and print veto variables and kinematics
@@ -243,12 +368,22 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   // Add daughters to parton list
   Parton daughter1(Parton(dau1_id, 51, pDau1, xa)); //Status: 51, active shower particles
   Parton daughter2(Parton(dau2_id, 51, pDau2, xa));
+
   //Parton daughter1(Parton(dau1_id, 51, pDau1, xa+parton_list[Split].x())); //Summing up formation times
   //Parton daughter2(Parton(dau2_id, 51, pDau2, xa+parton_list[Split].x()));
   daughter1.set_mom1(Split), daughter1.set_mom2(0);
   daughter2.set_mom1(Split), daughter2.set_mom2(0);
   daughter1.set_cols(col1);
   daughter2.set_cols(col2);
+  
+  double mom_stop_scale = parton_list[Split].stop_scale();
+  if (z>=0.5) daughter1.set_stop_scale( mom_stop_scale );
+  else daughter2.set_stop_scale( mom_stop_scale );
+  if (parton_list[Split].is_primary()) {
+    if (z>=0.5) daughter1.set_is_primary(1);
+    else daughter2.set_is_primary(1);
+  }
+
   daughter1.set_scale( std::sqrt(z*(1.-z)*Q2) );
   daughter2.set_scale( std::sqrt(z*(1.-z)*Q2) );
   parton_list.push_back(daughter1);
@@ -260,7 +395,7 @@ void Shower::Update( int Split, int Spect, int Kernel, double mar2, double z, do
   Parton recoiler = parton_list[Spect];
   recoiler.reset_momentum(UpSpect);
   recoiler.set_mom1(Spect), recoiler.set_mom2(Spect);
-  if (recoiler.stat()!=63) recoiler.set_stat(52);
+  if (recoiler.stat()!=63 && recoiler.stat()!=80) recoiler.set_stat(52);
   recoiler.set_x(xr);
   recoiler.set_x(xr+parton_list[Spect].x());  //Summing up formation times
   parton_list.push_back(recoiler);

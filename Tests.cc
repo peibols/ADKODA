@@ -133,7 +133,7 @@ void Tests::CascadeDist(std::vector<Parton> parton_list) {
 
     //cout << i << " "; p.display();
 
-    if (p.stat()>0 || p.stat()==-102)
+    if ((p.stat()>0 || p.stat()==-102) && p.stat()!=80)
     {
       final_p[0]+=p.px();
       final_p[1]+=p.py();

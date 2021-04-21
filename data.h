@@ -16,6 +16,7 @@ typedef struct init_data {
 
   int medium;
   bool do_quenching;
+  bool do_third_stage;
   double xmin_med;
   double eps_med;
   double L0;  // in GeV-1

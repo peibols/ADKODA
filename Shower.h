@@ -19,6 +19,7 @@ class Shower {
     ~Shower() {}
 
     void init( InPartons *inpartons);
+    void third_stage_init();
 
     void run();
 
@@ -62,6 +63,11 @@ class Shower {
     double L0;
     double alphas_med;
     double qhat0;    
+
+    bool in_third;
+
+    bool first_stop;
+    double stop_scale;
 
   private:
 

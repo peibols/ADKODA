@@ -32,6 +32,11 @@ void BerGEN::next() {
     parton_list = cascade->get_parton_list();
   }
   //shower->print();
+  if (DATA.do_third_stage) {
+    shower->third_stage_init();
+    shower->run();
+  }
+  parton_list = shower->get_parton_list();
 
 }
 
@@ -140,6 +145,12 @@ InitData BerGEN::read_in_parameters(std::string input_file) {
   tempinput = Util::StringFind4(input_file, "do_quenching");
   if (tempinput != "empty") std::istringstream(tempinput) >> temp_do_quenching;
   parameter_list.do_quenching = temp_do_quenching;
+
+  // Do medium cascade or not
+  bool temp_do_third_stage = false;
+  tempinput = Util::StringFind4(input_file, "do_third_stage");
+  if (tempinput != "empty") std::istringstream(tempinput) >> temp_do_third_stage;
+  parameter_list.do_third_stage = temp_do_third_stage;
 
   return parameter_list;
 

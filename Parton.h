@@ -107,6 +107,9 @@ class Parton : protected fjcore::PseudoJet
     void set_scale(double scale);
     double scale();
 
+    void set_stop_scale(double stop_scale);
+    double stop_scale();
+    
     void set_dippart(int dippart);
     int dippart();
     
@@ -118,6 +121,12 @@ class Parton : protected fjcore::PseudoJet
     void set_mom2( int mom ) { _mom2 = mom; }
     int mom2() { return _mom2; }
 
+    void set_is_primary(bool is_primary) { _is_primary = is_primary; }
+    bool is_primary() { return _is_primary; }
+
+    void set_is_frozen(bool is_frozen) { _is_frozen = is_frozen; }
+    bool is_frozen() { return _is_frozen; }
+    
     void set_d1(int d1);
     int d1();
 
@@ -150,7 +159,10 @@ class Parton : protected fjcore::PseudoJet
     int _mom1, _mom2, _d1, _d2;
     int _dippart;
     double _mass, _scale;
+    double _stop_scale;
     double _xfrac;
+    bool _is_primary;
+    bool _is_frozen;
 };
 
 } // end namespace Adkoda

@@ -3,6 +3,8 @@
 #include "Shower.h"
 #include "Util.h"
 
+using namespace Util;
+
 namespace Adkoda {
 
 Shower::Shower(const InitData &DATA_in) : DATA(DATA_in) {
@@ -69,6 +71,8 @@ void Shower::init (InPartons *inpartons) {
   event_xsec = inpartons->event_xsec;
   hard_pt_max = inpartons->hard_pt_max;
 
+  in_third = 0;
+
   //std::cout << " Weight= " << event_weight << " Xsec= " << event_xsec << " Pt Max= " << hard_pt_max << std::endl;
 
   // Fix minimum and maximum scale
@@ -92,7 +96,7 @@ void Shower::init (InPartons *inpartons) {
   else if (DATA.evol_scale==3) {              // qt ordering
     t_min = std::pow(DATA.pt_min, 2.) * 16.;
     //t_max = std::min(std::pow(DATA.pt_max, 2.) * 16., 4.*ecms);
-    t_max = std::pow(hard_pt_max/2., 2.) * 16.;
+    t_max = std::pow(hard_pt_max, 2.) * 16.;
   }
 
   // Update max_color index
@@ -107,6 +111,286 @@ void Shower::init (InPartons *inpartons) {
 
 }
 
+void Shower::third_stage_init() {
+
+  //std::cout << "Initializing 3rd Stage" << endl;
+      
+  in_third = 1;
+      
+  double Qs2 = DATA.qhat0 * DATA.L0;
+  //std::cout << "Qs2= " << Qs2 << std::endl;
+  t_min = std::pow(DATA.pt_min, 2.);
+  //t_max = Qs2;
+  //t_max = std::pow(hard_pt_max,2.);
+  t_max = stop_scale;
+  //t_max = std::pow(hard_pt_max, 2.) * 16.;
+
+  //for (unsigned int ip=0; ip<parton_list.size(); ip++) {
+    //parton_list[ip].set_is_frozen(0);
+  //}
+  
+  /*
+  double lambda=dis(gen);
+
+  for (unsigned int ip=0; ip<parton_list.size(); ip++) {
+     FourVector p = parton_list[ip].p();
+     FourVector pnew;
+     pnew.Set(p.x()*lambda,p.y()*lambda,p.z()*lambda,p.t()*lambda);
+     parton_list[ip].reset_momentum(pnew);
+  }
+  */
+/*
+  // Find hardest, count active
+  double ptmax= 0;
+  int imax = -1000;
+  int nactive = 0;
+  for (unsigned int ip=0; ip<parton_list.size(); ip++) {
+    Parton p = parton_list[ip];
+    if (p.stat()<0) continue;
+    if (p.stat()==63) {
+      parton_list[ip].set_stat(64);
+      continue;
+    }
+    nactive++;
+    if (p.pt() > ptmax) ptmax = p.pt(), imax=ip;
+  }
+  std::vector<bool> aredone (int(parton_list.size()),0);
+  
+  max_colour = 101;
+  int inow = imax;
+  int col[2] = {101,102};
+  max_colour++;
+  parton_list[inow].set_cols(col);
+  aredone[inow]=1;
+  nactive--;
+  while (true) {
+
+    Parton p = parton_list[inow];
+    double min_delR = 1000000;
+    int iclose = -1000;
+    for (unsigned int ip=0; ip<parton_list.size(); ip++) {
+      Parton k = parton_list[ip];
+      if (aredone[ip] == 1) continue;
+      if (k.stat()<0 || k.stat()==64) continue;
+      double delR = Util::Delta(p.p(),k.p());
+      //double phi1 = p.phi();
+      //double phi2 = k.phi();
+      //double deltaphi = fabs(phi1-phi2);
+      //std::cout << " phi1= " << phi1 << " phi2= " << phi2 << " deltaphi= " << deltaphi << std::endl;
+      if (delR < min_delR) min_delR = delR, iclose = ip;
+    }
+   
+    if (iclose == -1000) {
+      std::cout << " Could not find close!" << std::endl;
+      exit(1);
+    }
+
+    // Make link
+    int pcol[2] = {max_colour,max_colour+1};
+    max_colour++;
+    parton_list[iclose].set_cols(pcol);
+    
+    aredone[iclose]=1;
+    nactive--;
+
+    if (nactive==0) break;
+    inow = iclose;
+
+  }
+*/
+/*
+  std::vector<Parton> thermal_list;
+  int therm_id = 21;
+
+  max_colour = 101;
+
+  for (unsigned int ip=0; ip<parton_list.size(); ip++) {
+
+    Parton p = parton_list[ip];
+    if (p.stat()<0) continue;
+    if (p.stat()==63) {
+      parton_list[ip].set_stat(64); // Remnant frozen in third stage
+      continue;
+    }
+
+    double En = p.p().t();
+    double Th=0.00001;
+    double T = DATA.T0;
+    while (true) {
+      Th = 8.*T*dis(gen);
+      double func = Th * exp(-Th/T) / (T/exp(1));
+      double rand = dis(gen);
+      if (func>rand) break;
+    }
+    
+    double costheta = cos(2.*M_PI*dis(gen));
+    double kz = Th * costheta;
+    double kT = Th * sqrt(1-costheta*costheta);
+    double phi = 2.*M_PI*dis(gen);
+    double kx = kT * cos(phi);
+    double ky = kT * sin(phi);
+    FourVector pTherm;
+    pTherm.Set(kx,ky,kz,Th);
+    //double angle = -1000;
+    //double k[3] = {0.};
+    //FourVector pShower = p.p();
+    //AlignWithZ(pShower, angle, k);
+    //Rotation(pTherm, -angle, k);
+
+
+    FourVector xa;
+    Parton thermal(Parton(therm_id, 80, pTherm, xa));
+    thermal.set_mom1(0), thermal.set_mom2(0);
+
+    int col1[2]={max_colour, max_colour+1};
+    int col2[2]={max_colour+1, max_colour};
+
+    parton_list[ip].set_cols(col1);
+    thermal.set_cols(col2);
+    
+    max_colour+=2;
+
+    thermal_list.push_back(thermal);
+  
+  }
+
+  for (unsigned int ip=0; ip<thermal_list.size(); ip++) {
+    parton_list.push_back(thermal_list[ip]);
+  }
+
+  max_colour-=1; //last color actually
+
+*/
+
+/*
+  std::vector<Parton> new_list;
+  max_colour = 101;
+
+  for (unsigned int ip=0; ip<parton_list.size(); ip++) {
+    Parton p = parton_list[ip];
+    if (p.stat()<0) continue;
+    if (p.stat()==63) continue;
+    Parton pnew = p;
+    int col[2]={max_colour,max_colour+1};
+    pnew.set_cols(col);
+    new_list.push_back(pnew);
+    int npartners = 0;
+    bool corrected = 0;
+    for (unsigned int jp=0; jp<parton_list.size(); jp++) {
+      if (ip==jp) continue;
+      Parton k = parton_list[jp];
+      if (k.stat()<0) continue;
+      if (p.ColourConnected(k)) {
+        double dipmass = m2(p.p(),k.p());
+	double Qsvirt = std::sqrt(Qs2) * p.p().t();
+	//Qsvirt=0.;
+	Qsvirt*=2;
+	//double thetacscale = p.stop_scale();
+	//double minvirt = std::max(Qsvirt,thetacscale);
+	double minvirt = Qsvirt;
+	//std::cout << " dip mass= " << dipmass << " Qsvirt= " << Qsvirt << " ThetacScale= " << thetacscale << " ei= " << p.p().t() << " ej= " << k.p().t() << std::endl;
+     
+     	int kcol[2];
+	if (npartners==0) {
+          kcol[0]=max_colour+1;
+	  kcol[1]=max_colour+10000;
+	  npartners++;
+	}
+	else {
+          kcol[0]=max_colour+10001;
+	  kcol[1]=max_colour;
+	}
+     
+     	if (dipmass >= minvirt || corrected == 1) {
+          k.set_cols(kcol);
+          k.set_stat(80);
+          new_list.push_back(k);
+	}
+*/
+/*	
+        else {
+          double factor = minvirt/dipmass;
+	  FourVector knew;
+	  knew.Set(k.p().x()*factor,k.p().y()*factor, k.p().z()*factor, k.p().t()*factor);
+	  double checkmass = m2(knew,p.p());
+	  //std::cout << " checkmass = " << checkmass << " minvirt= " << minvirt << " factor= " << factor << std::endl;
+	  k.reset_momentum(knew);
+          k.set_cols(kcol);
+          k.set_stat(80);
+	  new_list.push_back(k);
+	  corrected = 1;
+	}
+*/
+	/*
+	else {
+          double En=p.p().t();
+          double Th=0.00001;
+          double T = DATA.T0;
+	  int ntry=0;
+	  bool couldnot=0;
+          while (true) {
+	    if (ntry>30) {
+	      couldnot=1;
+	      break;
+	    }
+	    while (true) {
+              Th = 8.*T*dis(gen);
+              double func = Th * exp(-Th/T) / (T/exp(1));
+              double rand = dis(gen);
+              if (func>rand) break;
+            }
+	    if (minvirt/2/En/Th<2) break;
+            else ntry++;
+	  }
+	  if (couldnot) {
+            std::cout << "Could not find!" << std::endl;
+	  }
+	  else {
+            double costheta = 1-minvirt/2/En/Th;
+            double kz = Th * costheta;
+            double kT = Th * sqrt(1-costheta*costheta);
+            double phi = 2.*M_PI*dis(gen);
+            double kx = kT * cos(phi);
+            double ky = kT * sin(phi);
+            FourVector pTherm;
+            pTherm.Set(kx,ky,kz,Th);
+            double angle = -1000;
+            double k[3] = {0.};
+            FourVector pShower = p.p();
+            AlignWithZ(pShower, angle, k);
+            Rotation(pTherm, -angle, k);
+
+            FourVector xa;
+            Parton thermal(Parton(21, 80, pTherm, xa));
+            thermal.set_mom1(0), thermal.set_mom2(0);
+
+	    thermal.set_cols(kcol);
+	    new_list.push_back(thermal);
+
+	   // std::cout << " Fixed virt, now= " << m2(p.p(),thermal.p()) << std::endl;
+	  } 
+
+	}
+
+      }
+    }
+    max_colour+=2;
+  }
+
+  max_colour-=1;
+*/
+/*
+  for (unsigned int ip=0; ip<new_list.size(); ip++) {
+    Parton p = new_list[ip];
+    std::cout << "en= " << p.p().t() << " stat= " << p.stat() << " col= " << p.col() << " acol= " << p.acol() << std::endl;
+  }
+*/
+
+  //parton_list = new_list;
+  
+  return;
+}
+
 void Shower::run () {
 
   //std::cout << "Initial Parton List size = " << parton_list.size() << endl;
@@ -115,7 +399,11 @@ void Shower::run () {
 
   // Vacuum Shower
   bool do_evolve = 1;
+  stop_scale = DATA.pt_min*DATA.pt_min;
+  first_stop = 0;
   while (do_evolve) do_evolve = evolve(); // FIXME how does this evolve() called?!
+
+  if (!in_third) std::cout << " Stop Scale= " << stop_scale << std::endl;
 
   //std::cout << "Shower FINISHED" << std::endl;
   //std::cout << "Final Parton List size = " << parton_list.size() << endl;
